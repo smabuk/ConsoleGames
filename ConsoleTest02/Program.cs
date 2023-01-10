@@ -1,9 +1,9 @@
 ﻿using Smab.DiceAndTiles;
-Console.Clear();
 
 QLessDice qlessDice = new();
 qlessDice.ShakeAndFillRack();
 
+Console.Clear();
 Console.WriteLine("Q-Less dice rack");
 for (int i = 0; i < qlessDice.Rack.Count; i++) {
 	Console.Write($"┌───┐ ");
@@ -19,14 +19,25 @@ for (int i = 0; i < qlessDice.Rack.Count; i++) {
 Console.WriteLine();
 
 (int cursorCol, int cursorRow) = Console.GetCursorPosition();
+Console.WriteLine();
 
-Console.Write("Die 0: ");
-DisplayDie(qlessDice.Rack[0], 12);
+Console.Write("    Vowels: ");
+qlessDice.Rack
+	.Where(d => "AEIOU".Contains(d.FaceValue.Value!))
+	.OrderBy(d => d.FaceValue.Value)
+	.ToList()
+	.ForEach(d => { DisplayDie(d, null, cursorRow); } );
+Console.WriteLine();
 
-Console.SetCursorPosition(20, cursorRow);
-Console.Write("Die 1: ");
-DisplayDie(qlessDice.Rack[1], 30);
+(cursorCol, cursorRow) = Console.GetCursorPosition();
+Console.WriteLine();
 
+Console.Write("Consonants: ");
+qlessDice.Rack
+	.Where(d => "AEIOU".Contains(d.FaceValue.Value!) == false)
+	.OrderBy(d => d.FaceValue.Value)
+	.ToList()
+	.ForEach(d => { DisplayDie(d, null, cursorRow); } );
 
 static void DisplayDie(LetterDie die, int? col = null, int? row = null, bool as3d = false) {
 	(int cursorCol, int cursorRow) = Console.GetCursorPosition();
