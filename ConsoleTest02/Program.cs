@@ -4,40 +4,13 @@ QLessDice qlessDice = new();
 qlessDice.ShakeAndFillRack();
 
 Console.Clear();
-Console.WriteLine("Q-Less dice rack");
-for (int i = 0; i < qlessDice.Rack.Count; i++) {
-	Console.Write($"┌───┐ ");
-}
-Console.WriteLine();
-foreach (LetterDie die in qlessDice.Rack) {
-	Console.Write($"│ {die.FaceValue.Display} │ ");
-}
-Console.WriteLine();
-for (int i = 0; i < qlessDice.Rack.Count; i++) {
-	Console.Write($"└───┘ ");
-}
-Console.WriteLine();
+Console.WriteLine("Q-Less");
 
-(int cursorCol, int cursorRow) = Console.GetCursorPosition();
-Console.WriteLine();
+IEnumerable<LetterDie> rack = qlessDice.Rack;
 
-Console.Write("    Vowels: ");
-qlessDice.Rack
-	.Where(d => "AEIOU".Contains(d.FaceValue.Value!))
-	.OrderBy(d => d.FaceValue.Value)
-	.ToList()
-	.ForEach(d => { DisplayDie(d, null, cursorRow); } );
-Console.WriteLine();
-
-(cursorCol, cursorRow) = Console.GetCursorPosition();
-Console.WriteLine();
-
-Console.Write("Consonants: ");
-qlessDice.Rack
-	.Where(d => "AEIOU".Contains(d.FaceValue.Value!) == false)
-	.OrderBy(d => d.FaceValue.Value)
-	.ToList()
-	.ForEach(d => { DisplayDie(d, null, cursorRow); } );
+DisplayRack(rack, "Rack");
+DisplayRack(rack.Where(d =>  "AEIOU".Contains(d.FaceValue.Value!)), "Vowels", true);
+DisplayRack(rack.Where(d => !"AEIOU".Contains(d.FaceValue.Value!)), "Consonants", true);
 
 static void DisplayDie(LetterDie die, int? col = null, int? row = null, bool as3d = false) {
 	(int cursorCol, int cursorRow) = Console.GetCursorPosition();
@@ -49,4 +22,22 @@ static void DisplayDie(LetterDie die, int? col = null, int? row = null, bool as3
 	Console.Write($"│ {die.FaceValue.Display} │");
 	Console.SetCursorPosition((int)col, (int)row + 2);
 	Console.Write($"└───┘");
+}
+
+static void DisplayRack(IEnumerable<LetterDie> dice, string name, bool sort = false) {
+	(int cursorCol, int cursorRow) = Console.GetCursorPosition();
+
+	Console.WriteLine();
+
+	IEnumerable<LetterDie> orderedDice = sort switch {
+		true => dice.OrderBy(d => d.FaceValue.Value),
+		false => dice
+	};
+
+	Console.Write($"{name,12}: ");
+	foreach (var die in orderedDice) {
+		DisplayDie(die, null, cursorRow);
+	}
+
+	Console.WriteLine();
 }
