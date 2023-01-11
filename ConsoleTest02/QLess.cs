@@ -8,29 +8,30 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 		QLessDice qlessDice = new();
 		qlessDice.ShakeAndFillRack();
 
-		Console.Clear();
-		//Console.WriteLine("Q-Less");
-
 		IEnumerable<LetterDie> rack = qlessDice.Rack;
 
 		DisplayRack(rack, "Rack");
 		if (settings.Verbose) {
-			DisplayRack(rack.Where(d => "AEIOU".Contains(d.FaceValue.Value!)), "Vowels", true);
+			DisplayRack(rack.Where(d =>  "AEIOU".Contains(d.FaceValue.Value!)), "Vowels"    , true);
 			DisplayRack(rack.Where(d => !"AEIOU".Contains(d.FaceValue.Value!)), "Consonants", true);
 		}
 		return 0;
 	}
 
 	static void DisplayRack(IEnumerable<LetterDie> dice, string name, bool sort = false) {
-		(int cursorCol, int cursorRow) = Console.GetCursorPosition();
-
-		Console.WriteLine();
 
 		IEnumerable<LetterDie> orderedDice = sort switch {
 			true => dice.OrderBy(d => d.FaceValue.Value),
 			false => dice
 		};
 
+		Console.WriteLine();
+		Console.WriteLine();
+		Console.WriteLine();
+		(int cursorCol, int cursorRow) = Console.GetCursorPosition();
+		cursorRow -= 3;
+
+		Console.SetCursorPosition((int)cursorCol, (int)cursorRow + 1);
 		Console.Write($"{name,12}: ");
 		foreach (var die in orderedDice) {
 			DisplayDie(die, null, cursorRow);
@@ -44,6 +45,7 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 		col ??= cursorCol;
 		row ??= cursorRow;
 		Console.SetCursorPosition((int)col, (int)row);
+
 		Console.Write($"┌───┐");
 		Console.SetCursorPosition((int)col, (int)row + 1);
 		Console.Write($"│ {die.FaceValue.Display} │");
@@ -52,7 +54,6 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 	}
 
 	public sealed class Settings : CommandSettings {
-
 		[Description("Display rack breakdown")]
 		[CommandOption("-v|--verbose")]
 		[DefaultValue(false)]
