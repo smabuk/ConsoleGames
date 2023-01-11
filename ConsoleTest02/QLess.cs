@@ -1,7 +1,6 @@
-﻿using System.ComponentModel;
+﻿namespace ConsoleTest02;
 
-namespace ConsoleTest02;
-
+[Description("Display a Q-Less rack")]
 public sealed class QLessCommand : Command<QLessCommand.Settings> {
 
 	public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings) {

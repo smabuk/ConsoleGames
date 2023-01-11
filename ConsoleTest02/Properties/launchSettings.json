@@ -2,7 +2,7 @@
   "profiles": {
     "ConsoleTest02": {
       "commandName": "Project",
-      "commandLineArgs": "qless -v"
+      //"commandLineArgs": "boggle superbig"
     }
   }
 }
