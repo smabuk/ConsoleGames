@@ -1,23 +1,21 @@
 ﻿namespace ConsoleTest02;
 
-[Description("Display a Q-Less rack")]
-public sealed class QLessCommand : Command<QLessCommand.Settings> {
+public sealed class QLess {
 
-	public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings) {
+	public static void DisplayQLess(bool verbose) {
 		QLessDice qlessDice = new();
 		qlessDice.ShakeAndFillRack();
 
 		IEnumerable<LetterDie> rack = qlessDice.Rack;
 
 		DisplayRack(rack, "Rack");
-		if (settings.Verbose) {
+		if (verbose) {
 			DisplayRack(rack.Where(d =>  "AEIOU".Contains(d.FaceValue.Value!)), "Vowels"    , true);
 			DisplayRack(rack.Where(d => !"AEIOU".Contains(d.FaceValue.Value!)), "Consonants", true);
 		}
-		return 0;
 	}
 
-	static void DisplayRack(IEnumerable<LetterDie> dice, string name, bool sort = false) {
+	private static void DisplayRack(IEnumerable<LetterDie> dice, string name, bool sort = false) {
 
 		IEnumerable<LetterDie> orderedDice = sort switch {
 			true => dice.OrderBy(d => d.FaceValue.Value),
@@ -39,7 +37,7 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 		Console.WriteLine();
 	}
 
-	static void DisplayDie(LetterDie die, int? col = null, int? row = null, bool as3d = false) {
+	private static void DisplayDie(LetterDie die, int? col = null, int? row = null, bool as3d = false) {
 		(int cursorCol, int cursorRow) = Console.GetCursorPosition();
 		col ??= cursorCol;
 		row ??= cursorRow;
@@ -51,12 +49,4 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 		Console.SetCursorPosition((int)col, (int)row + 2);
 		Console.Write($"└───┘");
 	}
-
-	public sealed class Settings : CommandSettings {
-		[Description("Display rack breakdown")]
-		[CommandOption("-v|--verbose")]
-		[DefaultValue(false)]
-		public bool Verbose { get; init; }
-	}
-
 }
