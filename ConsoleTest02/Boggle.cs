@@ -5,14 +5,16 @@ namespace ConsoleTest02;
 public sealed class Boggle {
 	private const int DieDisplayWidth  = 5;
 	private const int DieDisplayHeight = 3;
+	private const int OneSecond = 1000;
 
-	private static readonly TimeSpan s_GameLength = new(0, 3, 0);
+	private static readonly TimeSpan GameLength = new(0, 3,  0);
+	private static readonly TimeSpan RedZone    = new(0, 0, 10);
 
 	private List<Slot> Slots { get; set; } = new();
 	private readonly BoggleDice m_BoggleDice;
-	private long m_TimerStart;
-	private int m_TopRow = int.MinValue;
-	private int m_BottomRow;
+	private long _timerStart;
+	private int _topRow = int.MinValue;
+	private int _bottomRow;
 
 	public Boggle(BoggleDice.BoggleType type) {
 		Type = type;
@@ -26,7 +28,7 @@ public sealed class Boggle {
 			.ToList();
 	}
 
-	TimeSpan TimeRemaining => s_GameLength.Subtract(Stopwatch.GetElapsedTime(m_TimerStart));
+	TimeSpan TimeRemaining => GameLength.Subtract(Stopwatch.GetElapsedTime(_timerStart));
 
 	record Slot(LetterDie Die, string FaceValue, int Col, int Row);
 
@@ -35,24 +37,24 @@ public sealed class Boggle {
 
 	
 	public void DisplayBoggle(string word = "") {
-		if (m_TopRow == int.MinValue) {
+		if (_topRow == int.MinValue) {
 			for (int i = 0; i < (m_BoggleDice.BoardSize * DieDisplayHeight); i++) {
 				Console.WriteLine();
 			}
 
-			(int _, m_TopRow) = Console.GetCursorPosition();
-			m_TopRow -= (m_BoggleDice.BoardSize * DieDisplayHeight);
+			(int _, _topRow) = Console.GetCursorPosition();
+			_topRow -= (m_BoggleDice.BoardSize * DieDisplayHeight);
 		}
 
 		foreach (Slot slot in Slots) {
-			DisplayDie(slot.Die, slot.Col * DieDisplayWidth, m_TopRow + (slot.Row * DieDisplayHeight));
+			DisplayDie(slot.Die, slot.Col * DieDisplayWidth, _topRow + (slot.Row * DieDisplayHeight));
 		}
 
 		if (word.Length > 0) {
 			IEnumerable<Slot> slots = SlotsIfWordIsPossible(word);
 			foreach (Slot slot in slots) {
 				Console.ForegroundColor = ConsoleColor.Green;
-				DisplayDie(slot.Die, slot.Col * DieDisplayWidth, m_TopRow + (slot.Row * DieDisplayHeight));
+				DisplayDie(slot.Die, slot.Col * DieDisplayWidth, _topRow + (slot.Row * DieDisplayHeight));
 			}
 			Console.ResetColor();
 		}
@@ -78,13 +80,13 @@ public sealed class Boggle {
 	}
 
 	public void Play() {
-		m_TimerStart = Stopwatch.GetTimestamp();
+		_timerStart = Stopwatch.GetTimestamp();
 		Console.WriteLine();
-		(int _, m_BottomRow) = Console.GetCursorPosition();
+		(int _, _bottomRow) = Console.GetCursorPosition();
 		string currentWord = "";
-		while (TimeRemaining <= s_GameLength) {
+		while (TimeRemaining.Seconds > 0) {
 			DisplayBoggle(currentWord);
-			ConsoleKey key = DisplayAndGetInput(m_BottomRow, currentWord);
+			ConsoleKey key = DisplayAndGetInput(_bottomRow, currentWord);
 			if (key == ConsoleKey.Escape) {
 				break;
 			} else if (key == ConsoleKey.Enter && currentWord.Length >= 1) {
@@ -98,15 +100,21 @@ public sealed class Boggle {
 			} 
 		}
 
-		FinalSummary(m_BottomRow);
+		FinalSummary(_bottomRow);
 	}
 
 	private ConsoleKey DisplayAndGetInput(int row, string word) {
 		Console.SetCursorPosition(0, row);
 		Console.Write("                                                                                      ");
 		Console.SetCursorPosition(0, row);
-		Console.Write($"Time remaining: {TimeRemaining:m':'ss} Press <Esc> to exit... {word}");
-		return Console.ReadKey(true).Key;
+		Console.Write($"Time remaining: ");
+		if (TimeRemaining < RedZone) {
+			Console.ForegroundColor = ConsoleColor.Red;
+		}
+		Console.Write($"{TimeRemaining:m':'ss}");
+		Console.ResetColor();
+		Console.Write($" Press <Esc> to exit... {word}");
+		return KeyReader.ReadKey(OneSecond);
 	}
 
 	private void FinalSummary(int row) {
