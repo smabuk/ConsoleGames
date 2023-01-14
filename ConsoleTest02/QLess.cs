@@ -10,7 +10,9 @@ public sealed class QLess {
 
 		DisplayRack(rack, "Rack");
 		if (verbose) {
+			Console.WriteLine();
 			DisplayRack(rack.Where(d =>  "AEIOU".Contains(d.FaceValue.Value!)), "Vowels"    , true);
+			Console.WriteLine();
 			DisplayRack(rack.Where(d => !"AEIOU".Contains(d.FaceValue.Value!)), "Consonants", true);
 		}
 	}
@@ -33,8 +35,6 @@ public sealed class QLess {
 		foreach (var die in orderedDice) {
 			DisplayDie(die, null, cursorRow);
 		}
-
-		Console.WriteLine();
 	}
 
 	private static void DisplayDie(LetterDie die, int? col = null, int? row = null, bool as3d = false) {

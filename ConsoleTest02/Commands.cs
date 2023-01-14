@@ -13,28 +13,39 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 		[CommandOption("-v|--verbose")]
 		[DefaultValue(false)]
 		public bool Verbose { get; init; }
-	}
 
+		[Description("Play")]
+		[CommandOption("-p|--play")]
+		[DefaultValue(false)]
+		public bool Play { get; init; }
+	}
 }
 
 [Description("Display a Boggle board")]
 public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 	public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings) {
-		Boggle boggle = new();
-		boggle.DisplayBoggle(settings.BoggleType, settings.Play);
+		Boggle boggle = new(settings.BoggleType);
+		boggle.DisplayBoggle();
+
+		if (settings.Play) {
+			boggle.Play();
+		}
+
 		return 0;
 	}
 
 	public sealed class Settings : CommandSettings {
-		[Description("Boggle Type - classic, deluxe, big or superbig")]
+		[Description("Boggle Type - classic, deluxe, big, superbig, new or challenge")]
 		[CommandArgument(0, "[TYPE]")]
 		public string Type { get; init; } = "classic";
 
 		public BoggleDice.BoggleType BoggleType => Type.ToLower() switch {
-			"classic" => BoggleDice.BoggleType.Classic4x4,
-			"big" => BoggleDice.BoggleType.BigBoggleOriginal,
-			"deluxe" => BoggleDice.BoggleType.BigBoggleDeluxe,
-			"superbig" => BoggleDice.BoggleType.SuperBigBoggle2012,
+			"classic"   => BoggleDice.BoggleType.Classic4x4,
+			"big"       => BoggleDice.BoggleType.BigBoggleOriginal,
+			"deluxe"    => BoggleDice.BoggleType.BigBoggleDeluxe,
+			"superbig"  => BoggleDice.BoggleType.SuperBigBoggle2012,
+			"new"       => BoggleDice.BoggleType.New4x4,
+			"challenge" => BoggleDice.BoggleType.BigBoggleChallenge,
 			_ => throw new NotImplementedException(),
 		};
 
@@ -49,10 +60,12 @@ public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 				"big",
 				"deluxe",
 				"superbig",
+				"new",
+				"challenge",
 			};
 
 			if (!validTypes.Contains(Type.ToLower())) {
-				return ValidationResult.Error("Type must be one of classic, deluxe, big or superbig");
+				return ValidationResult.Error("Type must be one of classic, deluxe, big, superbig, new or challenge");
 			}
 
 			return base.Validate();
