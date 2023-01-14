@@ -20,7 +20,8 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 [Description("Display a Boggle board")]
 public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 	public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings) {
-		Boggle.DisplayBoggle(settings.BoggleType, settings.Play);
+		Boggle boggle = new();
+		boggle.DisplayBoggle(settings.BoggleType, settings.Play);
 		return 0;
 	}
 
