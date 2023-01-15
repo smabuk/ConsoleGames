@@ -11,12 +11,13 @@ public sealed class Boggle {
 
 	private readonly BoggleDice _boggleDice;
 	private List<Slot> _board = new();
+	private DictionaryOfWords? _dictionary;
 	private List<string> _words = new(); 
 	private long _timerStart;
 	private int _topRow = int.MinValue;
 	private int _bottomRow;
 
-	public Boggle(BoggleDice.BoggleType type) {
+	public Boggle(BoggleDice.BoggleType type, string? filename) {
 		Type = type;
 
 		_boggleDice = new(Type);
@@ -26,6 +27,10 @@ public sealed class Boggle {
 			.Board
 			.Select((die, index) => new Slot(die.FaceValue.Display, index % _boggleDice.BoardSize, index / _boggleDice.BoardSize))
 			.ToList();
+
+		if (!string.IsNullOrWhiteSpace(filename)) {
+			_dictionary = new DictionaryOfWords(filename);
+		}
 	}
 
 	private record Slot(string Letter, int Col, int Row);
@@ -71,7 +76,6 @@ public sealed class Boggle {
 			} else if (key == ConsoleKey.Enter && currentWord.Length >= 1) {
 				_words.Add(currentWord);
 				currentWord = "";
-				//ValidateAndScoreWord(word);
 			} else if (key == ConsoleKey.Backspace && currentWord.Length >= 1) {
 				currentWord = currentWord[..^1];
 			} else if (key >= ConsoleKey.A && key <= ConsoleKey.Z) {
@@ -84,7 +88,7 @@ public sealed class Boggle {
 
 	private ConsoleKey DisplayAndGetInput(int row, string word) {
 		Console.SetCursorPosition(0, row);
-		Console.Write("                                                                                      ");
+		Console.Write(new string(' ', Console.WindowWidth - 2));
 		Console.SetCursorPosition(0, row);
 		Console.Write($"Time remaining: ");
 		if (TimeRemaining < RedZone) {
@@ -98,20 +102,32 @@ public sealed class Boggle {
 
 	private void FinalSummary(int row) {
 		Console.SetCursorPosition(0, row);
-		Console.Write("                                                                                      ");
+		Console.Write(new string(' ', Console.WindowWidth - 2));
 		Console.WriteLine();
-		Console.WriteLine("Score Word");
+		Console.WriteLine("Score Word            Reason");
 		int totalScore = 0;
 		foreach (string word in _words.Order().Distinct()) {
+			string reason = "";
 			List<Slot> validSlots = BoggleSearch(word);
 			int score = 0;
 			if (validSlots.Count != 0) {
-				score = ScoreWord(word, Type);
-				totalScore += score;
+				if (_dictionary is not null) {
+					if (_dictionary.IsWord(word)) {
+						score = ScoreWord(word, Type);
+						totalScore += score;
+					} else {
+						reason = "Not a valid word";
+						Console.ForegroundColor = ConsoleColor.Red;
+					}
+				} else {
+					score = ScoreWord(word, Type);
+					totalScore += score;
+				}
 			} else {
+				reason = "Unplayable";
 				Console.ForegroundColor = ConsoleColor.Red;
 			}
-			Console.WriteLine($"{score,4}  {word}");
+			Console.WriteLine($"{score,4}  {word,-15} {reason}");
 			Console.ResetColor();
 		}
 		Console.WriteLine();

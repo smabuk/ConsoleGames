@@ -19,9 +19,11 @@ Currently supported games:
 	- challenge
 
 ### Options
-	-p | --play          Play the game
-	-t | --timer <secs>  Set the countdown timer length in seconds (default 180)
-	-v | --verbose       Display valid paths as you type the words
+	-p | --play              Play the game
+	-d | --dict  <filename>  Specify a dictionary
+	                         <filename> should be a file with valid words - 1 per line
+	-t | --timer <secs>      Set the countdown timer length in seconds (default 180)
+	-v | --verbose           Display valid paths as you type the words
 
 ---
 ## Q-Less

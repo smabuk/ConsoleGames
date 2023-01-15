@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "ConsoleTest02": {
+    "ConsoleGames": {
       "commandName": "Project",
       //"commandLineArgs": "boggle superbig -p -v"
     }

@@ -24,9 +24,9 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 [Description("The game of Boggle")]
 public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 	public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings) {
-		Boggle boggle = new(settings.BoggleType) {
-			Verbose = settings.Verbose,
-			GameLength = new(0, 0, settings.TimerLength),
+		Boggle boggle = new(settings.BoggleType, settings.Filename) {
+			Verbose            = settings.Verbose,
+			GameLength         = new(0, 0, settings.TimerLength),
 		};
 		boggle.DisplayBoard();
 
@@ -66,6 +66,10 @@ public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 		[CommandOption("-t|--time")]
 		[DefaultValue(180)]
 		public int TimerLength { get; init; }
+
+		[Description("Filename of the valid list of words to check against")]
+		[CommandOption("-d|--dict|--dictionary")]
+		public required string Filename { get; init; } = "";
 
 		public override ValidationResult Validate() {
 			string[] validTypes = {
