@@ -4,7 +4,16 @@
 public sealed class QLessCommand : Command<QLessCommand.Settings> {
 
 	public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings) {
-		QLess.DisplayQLess(settings.Verbose);
+		QLess qLess = new() {
+			Verbose = settings.Verbose
+		};
+
+		if (settings.Play) {
+			qLess.Play(settings.Filename);
+		} else {
+			qLess.DisplayQLess(settings.Verbose);
+		}
+
 		return 0;
 	}
 
@@ -18,6 +27,10 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 		[CommandOption("-p|--play")]
 		[DefaultValue(false)]
 		public bool Play { get; init; }
+
+		[Description("Filename of the valid list of words to check against")]
+		[CommandOption("-d|--dict|--dictionary")]
+		public required string Filename { get; init; } = "";
 	}
 }
 
