@@ -1,6 +1,6 @@
 ﻿namespace ConsoleTest02;
 
-[Description("Display a Q-Less rack")]
+[Description("The game of Q-Less")]
 public sealed class QLessCommand : Command<QLessCommand.Settings> {
 
 	public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings) {
@@ -14,18 +14,19 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 		[DefaultValue(false)]
 		public bool Verbose { get; init; }
 
-		[Description("Play")]
+		[Description("Play (not yet implemented)")]
 		[CommandOption("-p|--play")]
 		[DefaultValue(false)]
 		public bool Play { get; init; }
 	}
 }
 
-[Description("Display a Boggle board")]
+[Description("The game of Boggle")]
 public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 	public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings) {
 		Boggle boggle = new(settings.BoggleType) {
-			Verbose = settings.Verbose
+			Verbose = settings.Verbose,
+			GameLength = new(0, 0, settings.TimerLength),
 		};
 		boggle.DisplayBoggle();
 
@@ -60,6 +61,11 @@ public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 		[CommandOption("-v|--verbose")]
 		[DefaultValue(false)]
 		public bool Verbose { get; init; }
+
+		[Description("Set the countdown timer length in seconds")]
+		[CommandOption("-t|--time")]
+		[DefaultValue(180)]
+		public int TimerLength { get; init; }
 
 		public override ValidationResult Validate() {
 			string[] validTypes = {

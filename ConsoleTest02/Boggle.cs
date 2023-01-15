@@ -7,7 +7,6 @@ public sealed class Boggle {
 	private const int DieDisplayHeight = 3;
 	private const int OneSecond = 1000;
 
-	private static readonly TimeSpan GameLength = new(0, 3,  0);
 	private static readonly TimeSpan RedZone    = new(0, 0, 10);
 
 	private List<Slot> Board { get; set; } = new();
@@ -32,6 +31,7 @@ public sealed class Boggle {
 
 	record Slot(string Letter, int Col, int Row);
 
+	public TimeSpan GameLength { get; set; } = new(0, 3, 0);
 	public BoggleDice.BoggleType Type { get; set; } = Classic4x4;
 	public bool Verbose { get; set; } = false;
 	private List<string> Words { get; set; } = new(); 
