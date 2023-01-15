@@ -1,4 +1,4 @@
-﻿namespace ConsoleTest02;
+﻿namespace ConsoleGames;
 
 public sealed class QLess {
 

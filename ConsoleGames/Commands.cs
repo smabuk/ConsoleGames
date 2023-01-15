@@ -1,4 +1,4 @@
-﻿namespace ConsoleTest02;
+﻿namespace ConsoleGames;
 
 [Description("The game of Q-Less")]
 public sealed class QLessCommand : Command<QLessCommand.Settings> {

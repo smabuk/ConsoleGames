@@ -1,4 +1,4 @@
-﻿namespace ConsoleTest02;
+﻿namespace ConsoleGames;
 
 internal class KeyReader {
 	private static readonly Thread inputThread;

@@ -2,7 +2,7 @@
 global using System.Diagnostics;
 global using System.Diagnostics.CodeAnalysis;
 
-global using ConsoleTest02;
+global using ConsoleGames;
 
 global using Smab.DiceAndTiles;
 

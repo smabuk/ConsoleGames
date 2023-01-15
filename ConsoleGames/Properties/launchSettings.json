@@ -2,7 +2,7 @@
   "profiles": {
     "ConsoleTest02": {
       "commandName": "Project",
-      //"commandLineArgs": "boggle superbig"
+      //"commandLineArgs": "boggle superbig -p -v"
     }
   }
 }

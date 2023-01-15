@@ -1,6 +1,6 @@
 ﻿using static Smab.DiceAndTiles.BoggleDice.BoggleType;
 
-namespace ConsoleTest02;
+namespace ConsoleGames;
 
 public sealed class Boggle {
 	private const int DieDisplayWidth  = 5;

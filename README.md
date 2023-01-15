@@ -1,4 +1,4 @@
-# ConsoleTest02
+# Console Games
 
 Emulates some games played with various letter dice
 
