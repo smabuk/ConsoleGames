@@ -10,7 +10,7 @@ public sealed class Boggle {
 	private static readonly TimeSpan GameLength = new(0, 3,  0);
 	private static readonly TimeSpan RedZone    = new(0, 0, 10);
 
-	private List<Slot> Slots { get; set; } = new();
+	private List<Slot> Board { get; set; } = new();
 	private readonly BoggleDice m_BoggleDice;
 	private long _timerStart;
 	private int _topRow = int.MinValue;
@@ -22,19 +22,19 @@ public sealed class Boggle {
 		m_BoggleDice = new(Type);
 		m_BoggleDice.ShakeAndFillBoard();
 
-		Slots = m_BoggleDice
+		Board = m_BoggleDice
 			.Board
-			.Select((die, index) => new Slot(die, die.FaceValue.Display, index % m_BoggleDice.BoardSize, index / m_BoggleDice.BoardSize))
+			.Select((die, index) => new Slot(die.FaceValue.Display, index % m_BoggleDice.BoardSize, index / m_BoggleDice.BoardSize))
 			.ToList();
 	}
 
 	TimeSpan TimeRemaining => GameLength.Subtract(Stopwatch.GetElapsedTime(_timerStart));
 
-	record Slot(LetterDie Die, string FaceValue, int Col, int Row);
+	record Slot(string Letter, int Col, int Row);
 
-	public List<string> Words { get; set; } = new(); 
 	public BoggleDice.BoggleType Type { get; set; } = Classic4x4;
-
+	public bool Verbose { get; set; } = false;
+	private List<string> Words { get; set; } = new(); 
 	
 	public void DisplayBoggle(string word = "") {
 		if (_topRow == int.MinValue) {
@@ -46,36 +46,17 @@ public sealed class Boggle {
 			_topRow -= (m_BoggleDice.BoardSize * DieDisplayHeight);
 		}
 
-		foreach (Slot slot in Slots) {
-			DisplayDie(slot.Die, slot.Col * DieDisplayWidth, _topRow + (slot.Row * DieDisplayHeight));
+		foreach (Slot slot in Board) {
+			DisplayDie(slot.Letter, slot.Col * DieDisplayWidth, _topRow + (slot.Row * DieDisplayHeight));
 		}
 
-		if (word.Length > 0) {
-			IEnumerable<Slot> slots = SlotsIfWordIsPossible(word);
-			foreach (Slot slot in slots) {
+		if (Verbose && word.Length > 0) {
+			List<Slot> validSlots = BoggleSearch(word);
+			foreach (Slot slot in validSlots) {
 				Console.ForegroundColor = ConsoleColor.Green;
-				DisplayDie(slot.Die, slot.Col * DieDisplayWidth, _topRow + (slot.Row * DieDisplayHeight));
+				DisplayDie(slot.Letter, slot.Col * DieDisplayWidth, _topRow + (slot.Row * DieDisplayHeight));
 			}
 			Console.ResetColor();
-		}
-	}
-
-	private IEnumerable<Slot> SlotsIfWordIsPossible(string word) {
-		if (string.IsNullOrEmpty(word)) {
-			yield break;
-		}
-
-		List <Slot> startSlots = Slots
-			.Where(die => word.StartsWith(die.FaceValue.ToUpperInvariant()))
-			.ToList();
-
-		List<Slot> slots = new();
-		foreach (var start in startSlots) {
-
-		}
-		
-		foreach (Slot slot in slots) {
-			yield return slot;
 		}
 	}
 
@@ -123,16 +104,23 @@ public sealed class Boggle {
 		Console.WriteLine();
 		Console.WriteLine("Score Word");
 		int totalScore = 0;
-		foreach (string word in Words.Order()) {
-			int score = ScoreWord(word, Type);
-			totalScore += score;
+		foreach (string word in Words.Order().Distinct()) {
+			List<Slot> validSlots = BoggleSearch(word);
+			int score = 0;
+			if (validSlots.Count != 0) {
+				score = ScoreWord(word, Type);
+				totalScore += score;
+			} else {
+				Console.ForegroundColor = ConsoleColor.Red;
+			}
 			Console.WriteLine($"{score,4}  {word}");
+			Console.ResetColor();
 		}
 		Console.WriteLine();
 		Console.WriteLine($"{totalScore,4}  Total Score ");
 	}
 
-	private static void DisplayDie(LetterDie die, int? col = null, int? row = null) {
+	private static void DisplayDie(string letter, int? col = null, int? row = null) {
 		(int cursorCol, int cursorRow) = Console.GetCursorPosition();
 		col ??= cursorCol;
 		row ??= cursorRow;
@@ -140,7 +128,7 @@ public sealed class Boggle {
 
 		Console.Write($"┌───┐");
 		Console.SetCursorPosition((int)col, (int)row + 1);
-		Console.Write($"│ {die.FaceValue.Display, -2}│");
+		Console.Write($"│ {letter, -2}│");
 		Console.SetCursorPosition((int)col, (int)row + 2);
 		Console.Write($"└───┘");
 	}
@@ -171,6 +159,70 @@ public sealed class Boggle {
 		*     8+     11              8+     11             8      11
 		*                                                  9+   2 pts per letter
 		*/
+	}
+
+	/// <summary>
+	/// Searches the Board and validates the word.
+	/// </summary>
+	/// <param name="word"></param>
+	/// <returns>Returns the first list of slots that make up the word otherwise returns an empty List</returns>
+	List<Slot> BoggleSearch(string word) {
+		List<Slot> result = new();
+		int cols = Board.Max(x => x.Col) + 1;
+		int rows = Board.Max(x => x.Row) + 1;
+		bool[,] visited = new bool[rows, cols];
+		for (int i = 0; i < Board.Count; i++) {
+			if (BoggleDFS(word, 0, Board[i].Col, Board[i].Row, visited, result)) {
+				return result;
+			}
+		}
+		return result;
+	}
+
+	/// <summary>
+	/// Uses a Depth First Search algorithm to find the slots that make up the word
+	/// </summary>
+	/// <param name="word"></param>
+	/// <param name="index"></param>
+	/// <param name="col"></param>
+	/// <param name="row"></param>
+	/// <param name="visited"></param>
+	/// <param name="result"></param>
+	/// <returns></returns>
+	bool BoggleDFS(string word, int index, int col, int row, bool[,] visited, List<Slot> result) {
+		if (index == word.Length) {
+			return true;
+		}
+
+		if (col < 0 || col >= visited.GetLength(1) || row < 0 || row >= visited.GetLength(0)) {
+			return false;
+		}
+
+		if (visited[col, row]) {
+			return false;
+		}
+
+		Slot current = Board.First(x => x.Col == col && x.Row == row);
+		if (current.Letter[0] != word[index]) {
+			return false;
+		}
+
+		result.Add(current);
+		visited[col, row] = true;
+		bool found = BoggleDFS(word, index + 1, col - 1, row - 1, visited, result) ||
+					 BoggleDFS(word, index + 1, col    , row - 1, visited, result) ||
+					 BoggleDFS(word, index + 1, col + 1, row - 1, visited, result) ||
+					 BoggleDFS(word, index + 1, col - 1, row    , visited, result) ||
+					 BoggleDFS(word, index + 1, col + 1, row    , visited, result) ||
+					 BoggleDFS(word, index + 1, col - 1, row + 1, visited, result) ||
+					 BoggleDFS(word, index + 1, col    , row + 1, visited, result) ||
+					 BoggleDFS(word, index + 1, col + 1, row + 1, visited, result);
+		if (!found) {
+			result.Remove(current);
+		}
+
+		visited[col, row] = false;
+		return found;
 	}
 
 }

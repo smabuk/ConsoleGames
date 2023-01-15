@@ -24,7 +24,9 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 [Description("Display a Boggle board")]
 public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 	public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings) {
-		Boggle boggle = new(settings.BoggleType);
+		Boggle boggle = new(settings.BoggleType) {
+			Verbose = settings.Verbose
+		};
 		boggle.DisplayBoggle();
 
 		if (settings.Play) {
@@ -53,6 +55,11 @@ public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 		[CommandOption("-p|--play")]
 		[DefaultValue(false)]
 		public bool Play { get; init; }
+
+		[Description("Display valid paths as you type the words")]
+		[CommandOption("-v|--verbose")]
+		[DefaultValue(false)]
+		public bool Verbose { get; init; }
 
 		public override ValidationResult Validate() {
 			string[] validTypes = {
