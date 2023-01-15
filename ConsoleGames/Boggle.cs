@@ -68,7 +68,7 @@ public sealed class Boggle {
 		Console.WriteLine();
 		(int _, _bottomRow) = Console.GetCursorPosition();
 		string currentWord = "";
-		while (TimeRemaining.Seconds > 0) {
+		while (TimeRemaining.Ticks > 0) {
 			DisplayBoard(currentWord);
 			ConsoleKey key = DisplayAndGetInput(_bottomRow, currentWord);
 			if (key == ConsoleKey.Escape) {
