@@ -2,7 +2,7 @@
   "profiles": {
     "ConsoleGames": {
       "commandName": "Project",
-      //"commandLineArgs": "boggle superbig -p -v"
+      //"commandLineArgs": "qless -p"
     }
   }
 }
