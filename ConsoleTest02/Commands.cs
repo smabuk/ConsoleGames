@@ -28,7 +28,7 @@ public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 			Verbose = settings.Verbose,
 			GameLength = new(0, 0, settings.TimerLength),
 		};
-		boggle.DisplayBoggle();
+		boggle.DisplayBoard();
 
 		if (settings.Play) {
 			boggle.Play();

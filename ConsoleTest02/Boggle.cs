@@ -7,10 +7,11 @@ public sealed class Boggle {
 	private const int DieDisplayHeight = 3;
 	private const int OneSecond = 1000;
 
-	private static readonly TimeSpan RedZone    = new(0, 0, 10);
+	private static readonly TimeSpan RedZone = new(0, 0, 10);
 
-	private List<Slot> Board { get; set; } = new();
-	private readonly BoggleDice m_BoggleDice;
+	private readonly BoggleDice _boggleDice;
+	private List<Slot> _board = new();
+	private List<string> _words = new(); 
 	private long _timerStart;
 	private int _topRow = int.MinValue;
 	private int _bottomRow;
@@ -18,35 +19,32 @@ public sealed class Boggle {
 	public Boggle(BoggleDice.BoggleType type) {
 		Type = type;
 
-		m_BoggleDice = new(Type);
-		m_BoggleDice.ShakeAndFillBoard();
+		_boggleDice = new(Type);
+		_boggleDice.ShakeAndFillBoard();
 
-		Board = m_BoggleDice
+		_board = _boggleDice
 			.Board
-			.Select((die, index) => new Slot(die.FaceValue.Display, index % m_BoggleDice.BoardSize, index / m_BoggleDice.BoardSize))
+			.Select((die, index) => new Slot(die.FaceValue.Display, index % _boggleDice.BoardSize, index / _boggleDice.BoardSize))
 			.ToList();
 	}
 
-	TimeSpan TimeRemaining => GameLength.Subtract(Stopwatch.GetElapsedTime(_timerStart));
-
-	record Slot(string Letter, int Col, int Row);
+	private record Slot(string Letter, int Col, int Row);
 
 	public TimeSpan GameLength { get; set; } = new(0, 3, 0);
 	public BoggleDice.BoggleType Type { get; set; } = Classic4x4;
 	public bool Verbose { get; set; } = false;
-	private List<string> Words { get; set; } = new(); 
 	
-	public void DisplayBoggle(string word = "") {
+	public void DisplayBoard(string word = "") {
 		if (_topRow == int.MinValue) {
-			for (int i = 0; i < (m_BoggleDice.BoardSize * DieDisplayHeight); i++) {
+			for (int i = 0; i < (_boggleDice.BoardSize * DieDisplayHeight); i++) {
 				Console.WriteLine();
 			}
 
 			(int _, _topRow) = Console.GetCursorPosition();
-			_topRow -= (m_BoggleDice.BoardSize * DieDisplayHeight);
+			_topRow -= (_boggleDice.BoardSize * DieDisplayHeight);
 		}
 
-		foreach (Slot slot in Board) {
+		foreach (Slot slot in _board) {
 			DisplayDie(slot.Letter, slot.Col * DieDisplayWidth, _topRow + (slot.Row * DieDisplayHeight));
 		}
 
@@ -66,12 +64,12 @@ public sealed class Boggle {
 		(int _, _bottomRow) = Console.GetCursorPosition();
 		string currentWord = "";
 		while (TimeRemaining.Seconds > 0) {
-			DisplayBoggle(currentWord);
+			DisplayBoard(currentWord);
 			ConsoleKey key = DisplayAndGetInput(_bottomRow, currentWord);
 			if (key == ConsoleKey.Escape) {
 				break;
 			} else if (key == ConsoleKey.Enter && currentWord.Length >= 1) {
-				Words.Add(currentWord);
+				_words.Add(currentWord);
 				currentWord = "";
 				//ValidateAndScoreWord(word);
 			} else if (key == ConsoleKey.Backspace && currentWord.Length >= 1) {
@@ -104,7 +102,7 @@ public sealed class Boggle {
 		Console.WriteLine();
 		Console.WriteLine("Score Word");
 		int totalScore = 0;
-		foreach (string word in Words.Order().Distinct()) {
+		foreach (string word in _words.Order().Distinct()) {
 			List<Slot> validSlots = BoggleSearch(word);
 			int score = 0;
 			if (validSlots.Count != 0) {
@@ -166,13 +164,13 @@ public sealed class Boggle {
 	/// </summary>
 	/// <param name="word"></param>
 	/// <returns>Returns the first list of slots that make up the word otherwise returns an empty List</returns>
-	List<Slot> BoggleSearch(string word) {
+	private List<Slot> BoggleSearch(string word) {
 		List<Slot> result = new();
-		int cols = Board.Max(x => x.Col) + 1;
-		int rows = Board.Max(x => x.Row) + 1;
+		int cols = _board.Max(x => x.Col) + 1;
+		int rows = _board.Max(x => x.Row) + 1;
 		bool[,] visited = new bool[rows, cols];
-		for (int i = 0; i < Board.Count; i++) {
-			if (BoggleDFS(word, 0, Board[i].Col, Board[i].Row, visited, result)) {
+		for (int i = 0; i < _board.Count; i++) {
+			if (BoggleDFS(word, 0, _board[i].Col, _board[i].Row, visited, result)) {
 				return result;
 			}
 		}
@@ -189,12 +187,12 @@ public sealed class Boggle {
 	/// <param name="visited"></param>
 	/// <param name="result"></param>
 	/// <returns></returns>
-	bool BoggleDFS(string word, int index, int col, int row, bool[,] visited, List<Slot> result) {
+	private bool BoggleDFS(string word, int index, int col, int row, bool[,] visited, List<Slot> result) {
 		if (index == word.Length) {
 			return true;
 		}
 
-		if (col < 0 || col >= visited.GetLength(1) || row < 0 || row >= visited.GetLength(0)) {
+		if (col < 0 || col >= visited.GetLength(0) || row < 0 || row >= visited.GetLength(1)) {
 			return false;
 		}
 
@@ -202,21 +200,28 @@ public sealed class Boggle {
 			return false;
 		}
 
-		Slot current = Board.First(x => x.Col == col && x.Row == row);
-		if (current.Letter[0] != word[index]) {
-			return false;
+		Slot current = _board.First(x => x.Col == col && x.Row == row);
+		int newIndex = Math.Min(word.Length, index + current.Letter.Length);
+		if (current.Letter.Length == 1) {
+			if (current.Letter[0] != word[index]) {
+				return false;
+			}
+		} else {
+			if (current.Letter.ToUpperInvariant() != word[index..newIndex]) {
+				return false;
+			}
 		}
 
 		result.Add(current);
 		visited[col, row] = true;
-		bool found = BoggleDFS(word, index + 1, col - 1, row - 1, visited, result) ||
-					 BoggleDFS(word, index + 1, col    , row - 1, visited, result) ||
-					 BoggleDFS(word, index + 1, col + 1, row - 1, visited, result) ||
-					 BoggleDFS(word, index + 1, col - 1, row    , visited, result) ||
-					 BoggleDFS(word, index + 1, col + 1, row    , visited, result) ||
-					 BoggleDFS(word, index + 1, col - 1, row + 1, visited, result) ||
-					 BoggleDFS(word, index + 1, col    , row + 1, visited, result) ||
-					 BoggleDFS(word, index + 1, col + 1, row + 1, visited, result);
+		bool found = BoggleDFS(word, newIndex, col - 1, row - 1, visited, result) ||
+					 BoggleDFS(word, newIndex, col    , row - 1, visited, result) ||
+					 BoggleDFS(word, newIndex, col + 1, row - 1, visited, result) ||
+					 BoggleDFS(word, newIndex, col - 1, row    , visited, result) ||
+					 BoggleDFS(word, newIndex, col + 1, row    , visited, result) ||
+					 BoggleDFS(word, newIndex, col - 1, row + 1, visited, result) ||
+					 BoggleDFS(word, newIndex, col    , row + 1, visited, result) ||
+					 BoggleDFS(word, newIndex, col + 1, row + 1, visited, result);
 		if (!found) {
 			result.Remove(current);
 		}
@@ -224,5 +229,7 @@ public sealed class Boggle {
 		visited[col, row] = false;
 		return found;
 	}
+
+	private TimeSpan TimeRemaining => GameLength.Subtract(Stopwatch.GetElapsedTime(_timerStart));
 
 }
