@@ -35,10 +35,12 @@ internal sealed class QLess {
 		}
 		(int _, _bottomRow) = Console.GetCursorPosition();
 		_rackRow = _bottomRow - DieDisplayHeight;
+
 		_timerStart = Stopwatch.GetTimestamp();
 		string currentKey = "";
 		int currentRackIndex = -1;
 		List<Slot> board = _rack.Select((d, index) => new Slot(index, d.FaceValue.Display, 6, -1)).ToList();
+
 		while (true) {
 			DisplayBoard(board, highlightIndex: currentRackIndex);
 			Console.SetCursorPosition(0, _rackRow);
@@ -56,9 +58,7 @@ internal sealed class QLess {
 				List<string> words = swf.FindWords();
 
 				if (swf.WordsAsTiles.SelectMany(x => x).Distinct().Count() != RackSize) {
-					Console.ForegroundColor = ConsoleColor.Red;
-					DisplayBottomRow($" You haven't used all of the dice to make words (press a key to continue)... ");
-					Console.ResetColor();
+					DisplayBottomRow($" You haven't used all of the dice to make words (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
 				} else {
 					List<Slot> errors = new();
@@ -70,9 +70,7 @@ internal sealed class QLess {
 						}
 						if (errors.Count != 0) {
 							DisplayBoard(board, errors);
-							Console.ForegroundColor = ConsoleColor.Red;
-							DisplayBottomRow($" You have some words spelt incorrectly (press a key to continue)... ");
-							Console.ResetColor();
+							DisplayBottomRow($" You have some words spelt incorrectly (press a key to continue)... ", ConsoleColor.Red);
 							_ = Console.ReadKey(true).Key;
 						} else {
 							Console.ForegroundColor = ConsoleColor.Yellow;
@@ -176,11 +174,20 @@ internal sealed class QLess {
 		}
 	}
 
-	private void DisplayBottomRow(string message) {
+	private void DisplayBottomRow(string message, ConsoleColor? colour = null) {
 		Console.SetCursorPosition(0, _bottomRow);
 		Console.Write(new string(' ', Console.WindowWidth - 2));
+
+		if (colour is not null) {
+			Console.ForegroundColor = (ConsoleColor)colour;
+		}
+
 		Console.SetCursorPosition(0, _bottomRow);
 		Console.Write(message);
+
+		if (colour is not null) {
+			Console.ResetColor();
+		}
 	}
 
 	private static void DisplayRack(IEnumerable<LetterDie> dice, string name, bool sort = false, List<Slot>? board = null, int? highlightIndex = -1) {
