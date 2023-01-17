@@ -47,6 +47,7 @@ public sealed class Boggle {
 		
 		while (TimeRemaining.Ticks > 0) {
 			DisplayBoard(currentWord);
+			DisplayWordList();
 
 			ConsoleKey key = DisplayAndGetInput(_bottomRow, currentWord);
 			if (key == ConsoleKey.Escape) {
@@ -140,6 +141,49 @@ public sealed class Boggle {
 		Console.Write($"│ {letter, -2}│");
 		Console.SetCursorPosition((int)col, (int)row + 2);
 		Console.Write($"└───┘");
+	}
+
+	private void DisplayWordList() {
+		const int ScoreWidth = 2;
+
+		int startCol     = DieDisplayWidth * _boggleDice.BoardSize + 2;
+		int boardHeight  = DieDisplayHeight * _boggleDice.BoardSize;
+		int maxWordWidth = 12;
+
+		Console.SetCursorPosition(startCol, _topRow);
+		Console.Write($"┌{new string('─', Console.WindowWidth - 4 - startCol)}┐");
+		Console.SetCursorPosition(startCol + ((Console.WindowWidth - 4 - startCol) / 2) - 5, _topRow);
+		Console.Write($"Word List");
+
+		for (int i = 1; i < boardHeight - 1; i++) {
+			Console.SetCursorPosition(startCol, _topRow + i);
+			Console.Write($"│{new string(' ', Console.WindowWidth - 4 - startCol)}│");
+		}
+		Console.SetCursorPosition(startCol, _topRow + boardHeight - 1);
+		Console.Write($"└{new string('─', Console.WindowWidth - 4 - startCol)}┘");
+
+		int totalScore = 0;
+		int row = 0;
+		if (_words.Count > 0) {
+			maxWordWidth = _words.Max(w => w.Length);
+			int columnWidth = ScoreWidth + maxWordWidth + 3;
+
+			for (int wordIndex = 0; wordIndex < _words.Count; wordIndex++) {
+				row = wordIndex % (boardHeight - 2);
+				string word = _words[wordIndex];
+				(int score, string reason, ConsoleColor colour) = CheckWord(word);
+				if (_words.Take(wordIndex).Contains(word)) {
+					score = 0;
+					reason = "Duplicate word";
+					colour = ConsoleColor.DarkGray;
+				}
+				totalScore += score;
+				Console.ForegroundColor = colour;
+				Console.SetCursorPosition(startCol + 1 + (columnWidth * (wordIndex / (boardHeight - 2))), _topRow + 1 + row);
+				Console.Write($"{score,ScoreWidth} {word}");
+				Console.ResetColor();
+			}
+		}
 	}
 
 	private void FinalSummary(int row) {
