@@ -58,7 +58,6 @@ When you think you have solved the puzzle, press the `Enter` key.
 You can exit the puzzle at any time by pressing `Escape`.
 
 ### To be implemented
-- The board needs to be checked to ensure that all dice are part of words of at least 3 letters.
 - The board needs to be checked to ensure that all dice are in 1 contiguous block.
 
 ---

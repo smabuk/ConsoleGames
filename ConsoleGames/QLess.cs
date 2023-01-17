@@ -56,12 +56,24 @@ internal sealed class QLess {
 					.ToList();
 				ScrabbleWordFinder swf = new(scrabbleBoard, _dictionary!);
 				List<string> words = swf.FindWords();
-
+				List<Slot> errors = new();
 				if (swf.WordsAsTiles.SelectMany(x => x).Distinct().Count() != RackSize) {
 					DisplayBottomRow($" You haven't used all of the dice to make words (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
+				} else if (swf.WordsAsTiles.Where(x => x.Count >= 3 ).SelectMany(x => x).Distinct().Count() != RackSize) {
+					errors = swf
+						.WordsAsTiles
+						.Where(x => x.Count == 2)
+						.SelectMany(x => x)
+						.Select(t => new Slot(99, t.Letter.ToString(), t.Col, t.Row))
+						.ToList();
+					DisplayBoard(board, errors);
+					DisplayBottomRow($" Check your 2 letter words (press a key to continue)... ", ConsoleColor.Red);
+					_ = Console.ReadKey(true).Key;
+				} else if (IsBlockInMoreThanOnePiece(board)) {
+					DisplayBottomRow($" The dice are not joined into 1 block (press a key to continue)... ", ConsoleColor.Red);
+					_ = Console.ReadKey(true).Key;
 				} else {
-					List<Slot> errors = new();
 					if (_dictionary is not null) {
 						foreach (List<ScrabbleWordFinder.ScrabbleTile> tile in swf.WordsAsTiles) {
 							if (_dictionary.IsWord(string.Join("", tile.Select(t => t.Letter))) is false) {
@@ -102,6 +114,12 @@ internal sealed class QLess {
 		}
 
 		DisplayBottomRow($"Time elapsed: {Stopwatch.GetElapsedTime(_timerStart):mm\\:ss}");
+	}
+
+	private static bool IsBlockInMoreThanOnePiece(IReadOnlyCollection<Slot> board) {
+		// Doesn't work yet
+		// Idea - can I walk to Die 0 from any die
+		return false;
 	}
 
 	private void DisplayBoard(IReadOnlyCollection<Slot>? board = null, IReadOnlyCollection<Slot>? errors = null, int? highlightIndex = -1) {
