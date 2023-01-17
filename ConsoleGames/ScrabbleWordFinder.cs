@@ -2,21 +2,24 @@
 
 internal sealed class ScrabbleWordFinder {
 	private readonly List<ScrabbleTile>    _board;
-	private readonly DictionaryOfWords     _dictionary;
+	private readonly DictionaryOfWords?    _dictionary;
 	private readonly HashSet<string>       _visited;
-	private HashSet<ScrabbleTile>          _usedTiles;
-	public List<List<ScrabbleTile>> WordsAsTiles { get; private set; } = new();
 
-	public ScrabbleWordFinder(List<ScrabbleTile> board, DictionaryOfWords dictionary) {
+	public ScrabbleWordFinder(List<ScrabbleTile> board, DictionaryOfWords? dictionary = null) {
 		_board      = board;
 		_dictionary = dictionary;
 		_visited    = new();
-		_usedTiles  = new();
 	}
+
+	private enum Direction {
+		Horizontal,
+		Vertical
+	}
+
+	public List<List<ScrabbleTile>>        WordsAsTiles { get; private set; } = new();
 
 	public List<string> FindWords() {
 		List<string> foundWords = new();
-		_usedTiles = new();
 		WordsAsTiles = new();
 
 		foreach (ScrabbleTile currentTile in _board) {
@@ -38,7 +41,6 @@ internal sealed class ScrabbleWordFinder {
 		if (currentWordString.Length > 1 && IsEndOfWord(currentTile, direction)) {
 			//if (_dictionary.IsWord(currentWordString)) {
 			foundWords.Add(currentWordString);
-			currentWord.ForEach(i => _usedTiles.Add(i));
 			WordsAsTiles.Add(new(currentWord));
 			//}
 		}
@@ -54,23 +56,10 @@ internal sealed class ScrabbleWordFinder {
 		}
 	}
 
-	public int TilesUsed => _usedTiles.Count;
+	private static string GetKey(int col, int row) => $"{col}-{row}";
 
-	private bool IsStartOfWord(ScrabbleTile currentTile, Direction direction) {
-		return direction switch {
-			Direction.Horizontal => !_board.Any(x => x.Col == currentTile.Col - 1 && x.Row == currentTile.Row),
-			Direction.Vertical => !_board.Any(x => x.Row == currentTile.Row - 1 && x.Col == currentTile.Col),
-			_ => throw new NotImplementedException(),
-		};
-	}
+	private static string CreateWord(List<ScrabbleTile> tiles) => string.Join("", tiles.Select(t => t.Letter));
 
-	private bool IsEndOfWord(ScrabbleTile currentTile, Direction direction) {
-		return direction switch {
-			Direction.Horizontal => !_board.Any(x => x.Col == currentTile.Col + 1 && x.Row == currentTile.Row),
-			Direction.Vertical => !_board.Any(x => x.Row == currentTile.Row + 1 && x.Col == currentTile.Col),
-			_ => throw new NotImplementedException(),
-		};
-	}
 	private List<ScrabbleTile> GetNeighbours(ScrabbleTile tile, Direction direction) {
 		List<ScrabbleTile> neighbours = new();
 
@@ -83,40 +72,28 @@ internal sealed class ScrabbleWordFinder {
 		return neighbours;
 	}
 
-	private bool IsAdjacentAndInLine(ScrabbleTile tile1, ScrabbleTile tile2, Direction direction) {
-		if (direction == Direction.Vertical)
-			return tile1.Col == tile2.Col && (tile1.Row == tile2.Row - 1 || tile1.Row == tile2.Row + 1);
-		else
-			return tile1.Row == tile2.Row && (tile1.Col == tile2.Col - 1 || tile1.Col == tile2.Col + 1);
+	private static bool IsAdjacentAndInLine(ScrabbleTile tile1, ScrabbleTile tile2, Direction direction) {
+		return direction switch {
+			Direction.Vertical   => tile1.Col == tile2.Col && (tile1.Row == tile2.Row - 1 || tile1.Row == tile2.Row + 1),
+			Direction.Horizontal => tile1.Row == tile2.Row && (tile1.Col == tile2.Col - 1 || tile1.Col == tile2.Col + 1),
+			_ => throw new NotImplementedException()
+		};
 	}
 
-	private bool IsEndOfLine(ScrabbleTile tile1, ScrabbleTile tile2, Direction direction) {
-		if (direction == Direction.Vertical)
-			return tile1.Col == tile2.Col && (tile1.Row == tile2.Row - 1 || tile1.Row == tile2.Row + 1) && HasSpaceAtEnds(tile1.Col, tile1.Row, tile2.Row);
-		else
-			return tile1.Row == tile2.Row && (tile1.Col == tile2.Col - 1 || tile1.Col == tile2.Col + 1) && HasSpaceAtEnds(tile1.Row, tile1.Col, tile2.Col);
+	private bool IsEndOfWord(ScrabbleTile currentTile, Direction direction) {
+		return direction switch {
+			Direction.Horizontal => !_board.Any(x => x.Col == currentTile.Col + 1 && x.Row == currentTile.Row),
+			Direction.Vertical => !_board.Any(x => x.Row == currentTile.Row + 1 && x.Col == currentTile.Col),
+			_ => throw new NotImplementedException(),
+		};
 	}
 
-	private bool HasSpaceAtEnds(int line, int start, int end) {
-		return !_board.Any(x => x.Col == line && x.Row == start - 1) && !_board.Any(x => x.Col == line && x.Row == end + 1);
-	}
-
-	private bool IsNeighbour(ScrabbleTile tile1, ScrabbleTile tile2) {
-		return (tile1.Col == tile2.Col && (tile1.Row == tile2.Row - 1 || tile1.Row == tile2.Row + 1))
-			|| (tile1.Row == tile2.Row && (tile1.Col == tile2.Col - 1 || tile1.Col == tile2.Col + 1));
-	}
-
-	private string GetKey(int col, int row) {
-		return $"{col}-{row}";
-	}
-
-	private static string CreateWord(List<ScrabbleTile> tiles) {
-		return string.Join("", tiles.Select(t => t.Letter));
-	}
-
-	private enum Direction {
-		Horizontal,
-		Vertical
+	private bool IsStartOfWord(ScrabbleTile currentTile, Direction direction) {
+		return direction switch {
+			Direction.Horizontal => !_board.Any(x => x.Col == currentTile.Col - 1 && x.Row == currentTile.Row),
+			Direction.Vertical => !_board.Any(x => x.Row == currentTile.Row - 1 && x.Col == currentTile.Col),
+			_ => throw new NotImplementedException(),
+		};
 	}
 
 	public record ScrabbleTile(char Letter, int Col, int Row);

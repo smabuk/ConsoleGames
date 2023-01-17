@@ -23,7 +23,7 @@ public sealed class QLessCommand : Command<QLessCommand.Settings> {
 		[DefaultValue(false)]
 		public bool Verbose { get; init; }
 
-		[Description("Play (not yet implemented)")]
+		[Description("Play")]
 		[CommandOption("-p|--play")]
 		[DefaultValue(false)]
 		public bool Play { get; init; }
