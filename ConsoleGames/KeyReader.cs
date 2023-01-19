@@ -1,6 +1,6 @@
 ﻿namespace ConsoleGames;
 
-internal class KeyReader {
+public static class KeyReader {
 	private static readonly Thread inputThread;
 	private static readonly AutoResetEvent getKey;
 	private static readonly AutoResetEvent gotKey;

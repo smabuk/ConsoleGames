@@ -1,15 +1,12 @@
 ﻿namespace ConsoleGames;
 
-internal sealed class QLess {
-	private const int BoardDiceWidth   = 12;
-	private const int BoardDiceHeight  = 10;
+public sealed class QLess {
 	private const int BoardHeight      = 21;
 	private const int BoardIndent      = 21;
 	private const int DieDisplayHeight =  3;
 	private const int RackSize         = 12;
 
 	private readonly QLessDice       _qLessDice = new();
-	private readonly List<LetterDie> _rack      = new();
 
 	private DictionaryOfWords? _dictionary;
 	private long _timerStart;
@@ -17,14 +14,13 @@ internal sealed class QLess {
 	private int  _rackRow;
 	private int  _topRow = int.MinValue;
 
-	internal QLess() {
-		_qLessDice.ShakeAndFillRack();
-		_rack = _qLessDice.Rack;
+	public QLess()
+	{
 	}
 
 	public bool Verbose { get; set; } = false;
 
-	internal void Play(string filename) {
+	public void Play(string filename) {
 		if (string.IsNullOrWhiteSpace(filename) is false) {
 			_dictionary = new DictionaryOfWords(filename);
 		}
@@ -39,24 +35,23 @@ internal sealed class QLess {
 		_timerStart = Stopwatch.GetTimestamp();
 		string currentKey = "";
 		int currentRackIndex = -1;
-		List<Slot> board = _rack.Select((d, index) => new Slot(index, d.FaceValue.Display, 6, -1)).ToList();
 
 		while (true) {
-			DisplayBoard(board, highlightIndex: currentRackIndex);
+			DisplayBoard(_qLessDice.Board, highlightIndex: currentRackIndex);
 			Console.SetCursorPosition(0, _rackRow);
-			DisplayRack(_rack, "Rack", board: board, highlightIndex: currentRackIndex);
+			DisplayRack(_qLessDice.Rack, "Rack", board: _qLessDice.Board, highlightIndex: currentRackIndex);
 			DisplayBottomRow($" Press A-Z to select, arrow keys to place, <Enter> to check, and <Esc> to quit... ");
 			ConsoleKey key = Console.ReadKey(true).Key;
 			if (key == ConsoleKey.Escape) {
 				break;
 			} else if (key == ConsoleKey.Enter) {
-				List<ScrabbleWordFinder.ScrabbleTile> scrabbleBoard = 
-					board
-					.Select(d => new ScrabbleWordFinder.ScrabbleTile(d.Letter[0], d.Col, d.Row))
+				List<ScrabbleWordFinder.ScrabbleTile> scrabbleBoard =
+					_qLessDice.Board
+					.Select(d => new ScrabbleWordFinder.ScrabbleTile(d.Die.Display[0], d.Col, d.Row))
 					.ToList();
 				ScrabbleWordFinder swf = new(scrabbleBoard, _dictionary!);
 				List<string> words = swf.FindWords();
-				List<Slot> errors = new();
+				List<PositionedDie> errors = new();
 				if (swf.WordsAsTiles.SelectMany(x => x).Distinct().Count() != RackSize) {
 					DisplayBottomRow($" You haven't used all of the dice to make words (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
@@ -65,30 +60,30 @@ internal sealed class QLess {
 						.WordsAsTiles
 						.Where(x => x.Count == 2)
 						.SelectMany(x => x)
-						.Select(t => new Slot(99, t.Letter.ToString(), t.Col, t.Row))
+						.Select(t => new PositionedDie(_qLessDice.Board.Where(d => d.Col == t.Col && d.Row == t.Row).Single().Die, t.Col, t.Row))
 						.ToList();
-					DisplayBoard(board, errors);
+					DisplayBoard(_qLessDice.Board, errors);
 					DisplayBottomRow($" Check your 2 letter words (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
-				} else if (IsBlockInMoreThanOnePiece(board)) {
+				} else if (IsBlockInMoreThanOnePiece(_qLessDice.Board)) {
 					DisplayBottomRow($" The dice are not joined into 1 block (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
 				} else {
 					if (_dictionary is not null) {
 						foreach (List<ScrabbleWordFinder.ScrabbleTile> tile in swf.WordsAsTiles) {
 							if (_dictionary.IsWord(string.Join("", tile.Select(t => t.Letter))) is false) {
-								tile.ForEach(t => errors.Add(new Slot(99, t.Letter.ToString(), t.Col, t.Row)));
+								tile.ForEach(t => errors.Add(new PositionedDie(_qLessDice.Board.Where(d => d.Col == t.Col && d.Row == t.Row).Single().Die, t.Col, t.Row)));
 							}
 						}
 						if (errors.Count != 0) {
-							DisplayBoard(board, errors);
+							DisplayBoard(_qLessDice.Board, errors);
 							DisplayBottomRow($" You have some words spelt incorrectly (press a key to continue)... ", ConsoleColor.Red);
 							_ = Console.ReadKey(true).Key;
 						} else {
 							Console.ForegroundColor = ConsoleColor.Yellow;
-							DisplayBoard(board);
+							DisplayBoard(_qLessDice.Board);
 							Console.SetCursorPosition(0, _rackRow);
-							DisplayRack(_rack, "Success", board: board);
+							DisplayRack(_qLessDice.Rack, "Success", board: _qLessDice.Board);
 							Console.ResetColor();
 							break;
 						}
@@ -101,14 +96,14 @@ internal sealed class QLess {
 			} else if (key >= ConsoleKey.A && key <= ConsoleKey.Z) {
 				currentKey = key.ToString();
 				for (int i = currentRackIndex + 1; i < RackSize * 2; i++) {
-					if (board[i % RackSize].Letter == currentKey) {
+					if (_qLessDice.Board[i % RackSize].Die.Display == currentKey) {
 						currentRackIndex = i % RackSize;
 						break;
 					}
 				}
 			} else if (key is ConsoleKey.LeftArrow or ConsoleKey.RightArrow or ConsoleKey.UpArrow or ConsoleKey.DownArrow ) {
 				if (currentRackIndex >= 0) {
-					board[currentRackIndex] = MoveDie(board[currentRackIndex], board, key);
+					_qLessDice.Board[currentRackIndex] = MoveDie(_qLessDice.Board[currentRackIndex], _qLessDice.Board, key);
 				}
 			}
 		}
@@ -116,13 +111,13 @@ internal sealed class QLess {
 		DisplayBottomRow($"Time elapsed: {Stopwatch.GetElapsedTime(_timerStart):mm\\:ss}");
 	}
 
-	private static bool IsBlockInMoreThanOnePiece(IReadOnlyCollection<Slot> board) {
+	private static bool IsBlockInMoreThanOnePiece(IReadOnlyCollection<PositionedDie> board) {
 		// Doesn't work yet
 		// Idea - can I walk to Die 0 from any die
 		return false;
 	}
 
-	private void DisplayBoard(IReadOnlyCollection<Slot>? board = null, IReadOnlyCollection<Slot>? errors = null, int? highlightIndex = -1) {
+	private void DisplayBoard(IReadOnlyCollection<PositionedDie>? board = null, IReadOnlyCollection<PositionedDie>? errors = null, int? highlightIndex = -1) {
 		const string boardTemplate = """
 			                   ┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐
 			                   │   │   │   │   │   │   │   │   │   │   │   │   │
@@ -163,19 +158,19 @@ internal sealed class QLess {
 		}
 
 		if (board is not null) {
-			foreach (Slot slot in board) {
+			foreach (PositionedDie slot in board) {
 				if (slot.Row >= 0) {
 					Console.ResetColor();
 					int row = _topRow + 1 + (slot.Row * 2);
 					int col = BoardIndent + (slot.Col * 4);
 					Console.SetCursorPosition(col, row);
-					if (highlightIndex == slot.RackIndex) {
+					if (highlightIndex == slot.Index) {
 						Console.ForegroundColor = ConsoleColor.Green;
 					}
 					if (errors?.Any(d => d.Col == slot.Col && d.Row == slot.Row) ?? false) {
 						Console.ForegroundColor = ConsoleColor.Red;
 					}
-					Console.Write(slot.Letter);
+					Console.Write(slot.Die.Display);
 					Console.ResetColor();
 				}
 			}
@@ -183,12 +178,12 @@ internal sealed class QLess {
 	}
 
 	internal void DisplayQLess(bool verbose) {
-		DisplayRack(_rack, "Rack");
+		DisplayRack(_qLessDice.Rack, "Rack");
 		if (verbose) {
 			Console.WriteLine();
-			DisplayRack(_rack.Where(d =>  "AEIOU".Contains(d.FaceValue.Value!)), "Vowels"    , true);
+			DisplayRack(_qLessDice.Rack.Where(d =>  "AEIOU".Contains(d.FaceValue.Value!)), "Vowels"    , true);
 			Console.WriteLine();
-			DisplayRack(_rack.Where(d => !"AEIOU".Contains(d.FaceValue.Value!)), "Consonants", true);
+			DisplayRack(_qLessDice.Rack.Where(d => !"AEIOU".Contains(d.FaceValue.Value!)), "Consonants", true);
 		}
 	}
 
@@ -208,7 +203,7 @@ internal sealed class QLess {
 		}
 	}
 
-	private static void DisplayRack(IEnumerable<LetterDie> dice, string name, bool sort = false, List<Slot>? board = null, int? highlightIndex = -1) {
+	private static void DisplayRack(IEnumerable<LetterDie> dice, string name, bool sort = false, List<PositionedDie>? board = null, int? highlightIndex = -1) {
 		List<LetterDie> orderedDice = sort switch {
 			true  => dice.OrderBy(d => d.FaceValue.Value).ToList(),
 			false => dice.ToList()
@@ -248,8 +243,8 @@ internal sealed class QLess {
 		Console.Write($"└───┘");
 	}
 
-	private static Slot MoveDie(Slot slot, List<Slot> board, ConsoleKey key) {
-		int slotRow = (slot.Row < 0 ? BoardDiceHeight - 1 : slot.Row);
+	private static PositionedDie MoveDie(PositionedDie slot, List<PositionedDie> board, ConsoleKey key) {
+		int slotRow = (slot.Row < 0 ? QLessDice.BoardHeight - 1 : slot.Row);
 		switch (key) {
 			case ConsoleKey.LeftArrow:
 				for (int col = slot.Col - 1; col >= 0; col--) {
@@ -259,21 +254,21 @@ internal sealed class QLess {
 				}
 				break;
 			case ConsoleKey.RightArrow:
-				for (int col = slot.Col + 1; col < BoardDiceWidth; col++) {
+				for (int col = slot.Col + 1; col < QLessDice.BoardWidth; col++) {
 					if (!board.Any(d => d.Row == slot.Row && d.Col == col)) {
 						return slot with { Col = col, Row = slotRow };
 					}
 				}
 				break;
 			case ConsoleKey.DownArrow:
-				for (int row = slot.Row + 1; row < BoardDiceHeight; row++) {
+				for (int row = slot.Row + 1; row < QLessDice.BoardHeight; row++) {
 					if (!board.Any(d => d.Col == slot.Col && d.Row == row)) {
 						return slot with { Row = row };
 					}
 				}
 				break;
 			case ConsoleKey.UpArrow:
-				slotRow = (slot.Row < 0 ? BoardDiceHeight : slot.Row);
+				slotRow = (slot.Row < 0 ? QLessDice.BoardHeight : slot.Row);
 				for (int row = slotRow - 1; row >= 0; row--) {
 					if (!board.Any(d => d.Col == slot.Col && d.Row == row)) {
 						return slot with { Row = row };
@@ -286,6 +281,4 @@ internal sealed class QLess {
 
 		return slot;
 	}
-
-	private record Slot(int RackIndex, string Letter, int Col, int Row);
 }
