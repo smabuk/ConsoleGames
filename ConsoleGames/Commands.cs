@@ -51,7 +51,7 @@ public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 	}
 
 	public sealed class Settings : CommandSettings {
-		[Description("Boggle Type - classic, deluxe, big, superbig, new or challenge")]
+		[Description("Boggle Type - classic, deluxe, big, superbig or new")]
 		[CommandArgument(0, "[TYPE]")]
 		public string Type { get; init; } = "classic";
 
@@ -61,7 +61,7 @@ public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 			"deluxe"    => BoggleDice.BoggleType.BigBoggleDeluxe,
 			"superbig"  => BoggleDice.BoggleType.SuperBigBoggle2012,
 			"new"       => BoggleDice.BoggleType.New4x4,
-			"challenge" => BoggleDice.BoggleType.BigBoggleChallenge,
+			"challenge" => throw new NotImplementedException(),
 			_ => throw new NotImplementedException(),
 		};
 
@@ -91,11 +91,11 @@ public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 				"deluxe",
 				"superbig",
 				"new",
-				"challenge",
+				//"challenge",
 			};
 
 			if (!validTypes.Contains(Type.ToLower())) {
-				return ValidationResult.Error("Type must be one of classic, deluxe, big, superbig, new or challenge");
+				return ValidationResult.Error("Type must be one of classic, deluxe, big, superbig or new");
 			}
 
 			return base.Validate();
