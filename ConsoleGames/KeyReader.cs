@@ -23,9 +23,9 @@ public static class KeyReader {
 		}
 	}
 
-	public static ConsoleKey ReadKey(int timeOutMillisecs = Timeout.Infinite) {
+	public static ConsoleKey? ReadKey(int timeOutMillisecs = Timeout.Infinite) {
 		getKey.Set();
 		bool success = gotKey.WaitOne(timeOutMillisecs);
-		return success ? key : ConsoleKey.Zoom;
+		return success ? key : null;
 	}
 }

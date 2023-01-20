@@ -100,7 +100,8 @@ public sealed class Boggle {
 		Console.ResetColor();
 		Console.Write($" Press <Esc> to exit... {word}");
 
-		return KeyReader.ReadKey(OneSecond);
+		// If we get a timeout return a key that we don't use (Zoom)
+		return KeyReader.ReadKey(OneSecond) ?? ConsoleKey.Zoom;
 	}
 
 	public void DisplayBoard(string word = "") {
