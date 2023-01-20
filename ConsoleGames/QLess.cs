@@ -1,4 +1,6 @@
-﻿namespace ConsoleGames;
+﻿using static ConsoleGames.ScrabbleWordFinder;
+
+namespace ConsoleGames;
 
 public sealed class QLess {
 	private const int BoardHeight      = 21;
@@ -14,72 +16,91 @@ public sealed class QLess {
 	private int  _rackRow;
 	private int  _topRow = int.MinValue;
 
-	public QLess()
-	{
-	}
-
 	public bool Verbose { get; set; } = false;
 
-	public void Play(string filename) {
-		if (string.IsNullOrWhiteSpace(filename) is false) {
-			_dictionary = new DictionaryOfWords(filename);
+	public void Play(string? dictionaryFilename)
+	{
+
+		if (string.IsNullOrWhiteSpace(dictionaryFilename) is false)
+		{
+			_dictionary = new DictionaryOfWords(dictionaryFilename);
 		}
 
-		DisplayBoard();
-		for (int i = 0; i < DieDisplayHeight; i++) {
-			Console.WriteLine();
-		}
-		(int _, _bottomRow) = Console.GetCursorPosition();
-		_rackRow = _bottomRow - DieDisplayHeight;
+		DisplayInit();
 
 		_timerStart = Stopwatch.GetTimestamp();
 		string currentKey = "";
 		int currentRackIndex = -1;
 
-		while (true) {
+		while (true)
+		{
 			DisplayBoard(_qLessDice.Board, highlightIndex: currentRackIndex);
 			Console.SetCursorPosition(0, _rackRow);
 			DisplayRack(_qLessDice.Rack, "Rack", board: _qLessDice.Board, highlightIndex: currentRackIndex);
+
 			DisplayBottomRow($" Press A-Z to select, arrow keys to place, <Enter> to check, and <Esc> to quit... ");
 			ConsoleKey key = Console.ReadKey(true).Key;
-			if (key == ConsoleKey.Escape) {
+
+			if (key == ConsoleKey.Escape)
+			{
 				break;
-			} else if (key == ConsoleKey.Enter) {
-				List<ScrabbleWordFinder.ScrabbleTile> scrabbleBoard =
-					_qLessDice.Board
-					.Select(d => new ScrabbleWordFinder.ScrabbleTile(d.Die.Display[0], d.Col, d.Row))
-					.ToList();
-				ScrabbleWordFinder swf = new(scrabbleBoard, _dictionary!);
+			}
+			else if (key == ConsoleKey.Enter)
+			{
+				IEnumerable<ScrabbleTile> scrabbleBoard =
+					_qLessDice.Board.Select(d => new ScrabbleTile(d.Die.Display[0], d.Col, d.Row));
+				ScrabbleWordFinder swf = new(scrabbleBoard, _dictionary);
 				List<string> words = swf.FindWords();
 				List<PositionedDie> errors = new();
-				if (swf.WordsAsTiles.SelectMany(x => x).Distinct().Count() != RackSize) {
+				if (swf.WordsAsTiles.SelectMany(t => t).Distinct().Count() != RackSize)
+				{
 					DisplayBottomRow($" You haven't used all of the dice to make words (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
-				} else if (swf.WordsAsTiles.Where(x => x.Count >= 3 ).SelectMany(x => x).Distinct().Count() != RackSize) {
+				}
+				else if (swf.WordsAsTiles.Where(t => t.Count >= 3).SelectMany(t => t).Distinct().Count() != RackSize)
+				{
 					errors = swf
 						.WordsAsTiles
-						.Where(x => x.Count == 2)
-						.SelectMany(x => x)
+						.Where(t => t.Count == 2)
+						.SelectMany(t => t)
 						.Select(t => new PositionedDie(_qLessDice.Board.Where(d => d.Col == t.Col && d.Row == t.Row).Single().Die, t.Col, t.Row))
 						.ToList();
 					DisplayBoard(_qLessDice.Board, errors);
 					DisplayBottomRow($" Check your 2 letter words (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
-				} else if (swf.IsBlockInMoreThanOnePiece()) {
+				}
+				else if (swf.IsBlockInMoreThanOnePiece())
+				{
+					errors = swf
+						.Islands
+						.OrderByDescending(i => i.Count)
+						.Skip(1)
+						.SelectMany(t => t)
+						.Select(t => new PositionedDie(_qLessDice.Board.Where(d => d.Col == t.Col && d.Row == t.Row).Single().Die, t.Col, t.Row))
+						.ToList();
+					DisplayBoard(_qLessDice.Board, errors);
 					DisplayBottomRow($" The dice are not joined into 1 block (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
-				} else {
-					if (_dictionary is not null) {
-						foreach (List<ScrabbleWordFinder.ScrabbleTile> tile in swf.WordsAsTiles) {
-							if (_dictionary.IsWord(string.Join("", tile.Select(t => t.Letter))) is false) {
+				}
+				else
+				{
+					if (_dictionary is not null)
+					{
+						foreach (List<ScrabbleTile> tile in swf.WordsAsTiles)
+						{
+							if (_dictionary.IsWord(string.Join("", tile.Select(t => t.Letter))) is false)
+							{
 								tile.ForEach(t => errors.Add(new PositionedDie(_qLessDice.Board.Where(d => d.Col == t.Col && d.Row == t.Row).Single().Die, t.Col, t.Row)));
 							}
 						}
-						if (errors.Count != 0) {
+						if (errors.Count != 0)
+						{
 							DisplayBoard(_qLessDice.Board, errors);
 							DisplayBottomRow($" You have some words spelt incorrectly (press a key to continue)... ", ConsoleColor.Red);
 							_ = Console.ReadKey(true).Key;
-						} else {
+						}
+						else
+						{
 							Console.ForegroundColor = ConsoleColor.Yellow;
 							DisplayBoard(_qLessDice.Board);
 							Console.SetCursorPosition(0, _rackRow);
@@ -89,20 +110,31 @@ public sealed class QLess {
 						}
 					}
 					DisplayBottomRow($" No dictionary specified, so if you know you have this correct press Y now ... ");
-					if (Console.ReadKey(true).Key == ConsoleKey.Y) {
+					if (Console.ReadKey(true).Key == ConsoleKey.Y)
+					{
 						break;
 					}
 				}
-			} else if (key >= ConsoleKey.A && key <= ConsoleKey.Z) {
+			}
+			else if (key >= ConsoleKey.A && key <= ConsoleKey.Z)
+			{
 				currentKey = key.ToString();
-				for (int i = currentRackIndex + 1; i < RackSize * 2; i++) {
-					if (_qLessDice.Board[i % RackSize].Die.Display == currentKey) {
+				for (int i = currentRackIndex + 1; i < RackSize * 2; i++)
+				{
+					if (_qLessDice.Board[i % RackSize].Die.Display == currentKey)
+					{
 						currentRackIndex = i % RackSize;
 						break;
 					}
 				}
-			} else if (key is ConsoleKey.LeftArrow or ConsoleKey.RightArrow or ConsoleKey.UpArrow or ConsoleKey.DownArrow ) {
-				if (currentRackIndex >= 0) {
+			}
+			else if (key is ConsoleKey.LeftArrow
+				or ConsoleKey.RightArrow
+				or ConsoleKey.UpArrow
+				or ConsoleKey.DownArrow)
+			{
+				if (currentRackIndex >= 0)
+				{
 					_qLessDice.Board[currentRackIndex] = MoveDie(_qLessDice.Board[currentRackIndex], _qLessDice.Board, key);
 				}
 			}
@@ -112,6 +144,8 @@ public sealed class QLess {
 	}
 
 	private void DisplayBoard(IReadOnlyCollection<PositionedDie>? board = null, IReadOnlyCollection<PositionedDie>? errors = null, int? highlightIndex = -1) {
+		const int RowHeight = 2;
+		const int ColWidth = 4;
 		const string boardTemplate = """
 			                   ┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐
 			                   │   │   │   │   │   │   │   │   │   │   │   │   │
@@ -155,8 +189,8 @@ public sealed class QLess {
 			foreach (PositionedDie slot in board) {
 				if (slot.Row >= 0) {
 					Console.ResetColor();
-					int row = _topRow + 1 + (slot.Row * 2);
-					int col = BoardIndent + (slot.Col * 4);
+					int row = _topRow + 1 + (slot.Row * RowHeight);
+					int col = BoardIndent + (slot.Col * ColWidth);
 					Console.SetCursorPosition(col, row);
 					if (highlightIndex == slot.Index) {
 						Console.ForegroundColor = ConsoleColor.Green;
@@ -171,7 +205,24 @@ public sealed class QLess {
 		}
 	}
 
-	internal void DisplayQLess(bool verbose) {
+	/// <summary>
+	/// The first time we run, we have to make sure that we know where the bottom and rack rows will be
+	/// If we have to scroll the cursor numbers change
+	/// </summary>
+	private void DisplayInit()
+	{
+		DisplayBoard();
+
+		for (int i = 0; i < DieDisplayHeight; i++)
+		{
+			Console.WriteLine();
+		}
+
+		(int _, _bottomRow) = Console.GetCursorPosition();
+		_rackRow = _bottomRow - DieDisplayHeight;
+	}
+
+	public void DisplayQLess(bool verbose) {
 		DisplayRack(_qLessDice.Rack, "Rack");
 		if (verbose) {
 			Console.WriteLine();

@@ -1,4 +1,4 @@
-﻿using Spectre.Console;
+﻿using System.Collections.Generic;
 
 namespace ConsoleGames;
 
@@ -7,8 +7,8 @@ internal sealed class ScrabbleWordFinder {
 	private readonly DictionaryOfWords?    _dictionary;
 	private readonly HashSet<string>       _visited;
 
-	public ScrabbleWordFinder(List<ScrabbleTile> board, DictionaryOfWords? dictionary = null) {
-		_board      = board;
+	public ScrabbleWordFinder(IEnumerable<ScrabbleTile> board, DictionaryOfWords? dictionary = null) {
+		_board      = board.ToList();
 		_dictionary = dictionary;
 		_visited    = new();
 	}
@@ -19,6 +19,7 @@ internal sealed class ScrabbleWordFinder {
 	}
 
 	public List<List<ScrabbleTile>>        WordsAsTiles { get; private set; } = new();
+	public List<List<ScrabbleTile>>        Islands      { get; private set; } = new();
 
 	public List<string> FindWords() {
 		List<string> foundWords = new();
@@ -85,6 +86,7 @@ internal sealed class ScrabbleWordFinder {
 	public bool IsBlockInMoreThanOnePiece()
 	{
 		HashSet<(int Col, int Row)> visited = new();
+		List<ScrabbleTile> island = new();
 
 		int noOfIslands = 0;
 		foreach (var tile in _board)
@@ -95,7 +97,9 @@ internal sealed class ScrabbleWordFinder {
 			}
 
 			noOfIslands++;
+			island = new();
 			VisitAdjacent(tile.Col, tile.Row);
+			Islands.Add(island);
 		}
 
 		return noOfIslands != 1;
@@ -107,12 +111,15 @@ internal sealed class ScrabbleWordFinder {
 				return;
 			}
 
-			if (visited.Contains((col, row)) || _board.Exists(t => t.Col == col && t.Row == row) is false)
+			ScrabbleTile? tile = _board.SingleOrDefault(t => t.Col == col && t.Row == row);
+			if (visited.Contains((col, row)) || tile is null)
 			{
 				return;
 			}
 
 			visited.Add((col, row));
+			island.Add(tile);
+
 			VisitAdjacent(col - 1, row);
 			VisitAdjacent(col + 1, row);
 			VisitAdjacent(col    , row + 1);
