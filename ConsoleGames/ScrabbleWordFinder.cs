@@ -1,4 +1,6 @@
-﻿namespace ConsoleGames;
+﻿using Spectre.Console;
+
+namespace ConsoleGames;
 
 internal sealed class ScrabbleWordFinder {
 	private readonly List<ScrabbleTile>    _board;
@@ -45,7 +47,7 @@ internal sealed class ScrabbleWordFinder {
 			//}
 		}
 
-		var neighbours = GetNeighbours(currentTile, direction);
+		List<ScrabbleTile> neighbours = GetNeighbours(currentTile, direction);
 		for (int i = 0; i < neighbours.Count; i++) {
 			var nextTile = neighbours[i];
 			if (!currentWord.Contains(nextTile)) {
@@ -80,10 +82,48 @@ internal sealed class ScrabbleWordFinder {
 		};
 	}
 
+	public bool IsBlockInMoreThanOnePiece()
+	{
+		HashSet<(int Col, int Row)> visited = new();
+
+		int noOfIslands = 0;
+		foreach (var tile in _board)
+		{
+			if (visited.Contains((tile.Col, tile.Row)))
+			{
+				continue;
+			}
+
+			noOfIslands++;
+			VisitAdjacent(tile.Col, tile.Row);
+		}
+
+		return noOfIslands != 1;
+
+		void VisitAdjacent(int col, int row)
+		{
+			if (row < 0 || col < 0)
+			{
+				return;
+			}
+
+			if (visited.Contains((col, row)) || _board.Exists(t => t.Col == col && t.Row == row) is false)
+			{
+				return;
+			}
+
+			visited.Add((col, row));
+			VisitAdjacent(col - 1, row);
+			VisitAdjacent(col + 1, row);
+			VisitAdjacent(col    , row + 1);
+			VisitAdjacent(col    , row - 1);
+		}
+	}
+
 	private bool IsEndOfWord(ScrabbleTile currentTile, Direction direction) {
 		return direction switch {
 			Direction.Horizontal => !_board.Any(x => x.Col == currentTile.Col + 1 && x.Row == currentTile.Row),
-			Direction.Vertical => !_board.Any(x => x.Row == currentTile.Row + 1 && x.Col == currentTile.Col),
+			Direction.Vertical   => !_board.Any(x => x.Row == currentTile.Row + 1 && x.Col == currentTile.Col),
 			_ => throw new NotImplementedException(),
 		};
 	}
@@ -91,7 +131,7 @@ internal sealed class ScrabbleWordFinder {
 	private bool IsStartOfWord(ScrabbleTile currentTile, Direction direction) {
 		return direction switch {
 			Direction.Horizontal => !_board.Any(x => x.Col == currentTile.Col - 1 && x.Row == currentTile.Row),
-			Direction.Vertical => !_board.Any(x => x.Row == currentTile.Row - 1 && x.Col == currentTile.Col),
+			Direction.Vertical   => !_board.Any(x => x.Row == currentTile.Row - 1 && x.Col == currentTile.Col),
 			_ => throw new NotImplementedException(),
 		};
 	}

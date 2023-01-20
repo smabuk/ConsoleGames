@@ -65,7 +65,7 @@ public sealed class QLess {
 					DisplayBoard(_qLessDice.Board, errors);
 					DisplayBottomRow($" Check your 2 letter words (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
-				} else if (IsBlockInMoreThanOnePiece(_qLessDice.Board)) {
+				} else if (swf.IsBlockInMoreThanOnePiece()) {
 					DisplayBottomRow($" The dice are not joined into 1 block (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
 				} else {
@@ -109,12 +109,6 @@ public sealed class QLess {
 		}
 
 		DisplayBottomRow($"Time elapsed: {Stopwatch.GetElapsedTime(_timerStart):mm\\:ss}");
-	}
-
-	private static bool IsBlockInMoreThanOnePiece(IReadOnlyCollection<PositionedDie> board) {
-		// Doesn't work yet
-		// Idea - can I walk to Die 0 from any die
-		return false;
 	}
 
 	private void DisplayBoard(IReadOnlyCollection<PositionedDie>? board = null, IReadOnlyCollection<PositionedDie>? errors = null, int? highlightIndex = -1) {
