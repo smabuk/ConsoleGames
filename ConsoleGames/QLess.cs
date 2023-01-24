@@ -57,12 +57,13 @@ public sealed class QLess {
 					DisplayBottomRow($" You haven't used all of the dice to make words (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
 				}
-				else if (swf.WordsAsTiles.Where(t => t.Count >= 3).SelectMany(t => t).Distinct().Count() != RackSize)
+				else if (swf.WordsAsTiles.Where(t => t.Count == 2).Any())
 				{
 					errors = swf
 						.WordsAsTiles
 						.Where(t => t.Count == 2)
 						.SelectMany(t => t)
+						.Distinct()
 						.Select(t => new PositionedDie(_qLessDice.Board.Where(d => d.Col == t.Col && d.Row == t.Row).Single().Die, t.Col, t.Row))
 						.ToList();
 					DisplayBoard(_qLessDice.Board, errors);
