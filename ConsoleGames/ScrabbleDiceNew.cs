@@ -74,13 +74,13 @@ public partial class ScrabbleDice2
 	{
 		return (word.Length) switch
 		{
-			2 => 02,
-			3 => 05,
+			2 =>  2,
+			3 =>  5,
 			4 => 10,
 			5 => 18,
 			6 => 25,
 			7 => 50,
-			_ => 0
+			_ =>  0
 		};
 	}
 

@@ -11,7 +11,12 @@ app.Configure(config => {
 
 	config.AddCommand<QLessCommand>("qless")
 		.WithExample(new[] { "qless", })
+		.WithExample(new[] { "qless", "-p" })
 		.WithExample(new[] { "qless", "-v" });
+
+	config.AddCommand<ScrabbleDiceCommand>("scrabbledice")
+		.WithExample(new[] { "scrabbledice", })
+		.WithExample(new[] { "scrabbledice", "-v" });
 
 });
 

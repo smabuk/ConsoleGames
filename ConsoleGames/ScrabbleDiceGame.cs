@@ -4,7 +4,7 @@ namespace ConsoleGames;
 
 public class ScrabbleDiceGame
 {
-	private const int BoardHeight = 17;
+	private const int BoardHeight = 19;
 	private const int BoardIndent = 17;
 	private const int DieDisplayHeight = 3;
 	private const int RackSize = 12;

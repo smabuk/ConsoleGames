@@ -2,7 +2,7 @@
   "profiles": {
     "ConsoleGames": {
       "commandName": "Project",
-      //"commandLineArgs": "qless -p"
+      "commandLineArgs": "scrabbledice -p"
     }
   }
 }
