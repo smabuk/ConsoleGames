@@ -9,9 +9,9 @@ public sealed class Boggle {
 
 	private static readonly TimeSpan RedZone = new(0, 0, 10);
 
+	private readonly DictionaryOfWords? _dictionary;
 	private readonly BoggleDice   _boggleDice;
-	private        List<string>   _words       = new(); 
-	private  DictionaryOfWords?   _dictionary;
+	private readonly List<string>  _words       = []; 
 	private long                  _timerStart;
 	private int                   _bottomRow;
 	private int                   _topRow      = int.MinValue;
@@ -50,7 +50,7 @@ public sealed class Boggle {
 				currentWord = "";
 			} else if (key == ConsoleKey.Backspace && currentWord.Length > 0) {
 				currentWord = currentWord[..^1];
-			} else if (key >= ConsoleKey.A && key <= ConsoleKey.Z) {
+			} else if (key is >= ConsoleKey.A and <= ConsoleKey.Z) {
 				currentWord += key;
 			} 
 		}
@@ -144,7 +144,7 @@ public sealed class Boggle {
 	private void DisplayWordList() {
 		const int ScoreWidth = 2;
 
-		int startCol     = DieDisplayWidth  * _boggleDice.BoardWidth + 2;
+		int startCol     = (DieDisplayWidth  * _boggleDice.BoardWidth) + 2;
 		int boardHeight  = DieDisplayHeight * _boggleDice.BoardHeight;
 		int maxWordWidth = 12;
 
