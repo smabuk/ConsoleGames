@@ -48,9 +48,9 @@ public class ScrabbleDiceGame
 			}
 			else if (key == ConsoleKey.Enter)
 			{
-				IEnumerable<PositionedLetter> scrabbleBoard =
-					_scrabbleDice.Board.Select(d => new PositionedLetter(d.Die.Display[0], d.Col, d.Row));
-				ScrabbleWordFinder swf = new(scrabbleBoard, _dictionary);
+				//IEnumerable<PositionedLetter> scrabbleBoard =
+				//	_scrabbleDice.Board.Select(d => new PositionedLetter(d.Die.Display[0], d.Col, d.Row));
+				ScrabbleWordFinder swf = new(_scrabbleDice.Board, _dictionary);
 				List<string> words = swf.FindWords();
 				List<PositionedDie> errors = [];
 				if (swf.ValidWordsAsTiles.SelectMany(t => t).Distinct().Count() != RackSize)
@@ -87,13 +87,14 @@ public class ScrabbleDiceGame
 				{
 					if (_dictionary is not null)
 					{
-						foreach (List<PositionedLetter> tile in swf.ValidWordsAsTiles)
+						foreach (List<PositionedTile> tile in swf.ValidWordsAsTiles)
 						{
-							if (_dictionary.IsWord(string.Join("", tile.Select(t => t.Letter))) is false)
+							if (_dictionary.IsWord(string.Join("", tile.Select(t => (t.Tile as LetterTile)!.Letter))) is false)
 							{
 								tile.ForEach(t => errors.Add(new PositionedDie(_scrabbleDice.Board.Where(d => d.Col == t.Col && d.Row == t.Row).Single().Die, t.Col, t.Row)));
 							}
 						}
+
 						if (errors.Count != 0)
 						{
 							DisplayBoard(_scrabbleDice.Board, errors);
@@ -110,6 +111,7 @@ public class ScrabbleDiceGame
 							break;
 						}
 					}
+
 					DisplayBottomRow($" No dictionary specified, so if you know you have this correct press Y now ... ");
 					if (Console.ReadKey(true).Key == ConsoleKey.Y)
 					{
@@ -203,10 +205,12 @@ public class ScrabbleDiceGame
 					{
 						Console.ForegroundColor = ConsoleColor.Green;
 					}
+
 					if (errors?.Any(d => d.Col == slot.Col && d.Row == slot.Row) ?? false)
 					{
 						Console.ForegroundColor = ConsoleColor.Red;
 					}
+
 					Console.Write(slot.Die.Display);
 					Console.ResetColor();
 				}
@@ -254,8 +258,8 @@ public class ScrabbleDiceGame
 	{
 		List<LetterDie> orderedDice = sort switch
 		{
-			true => dice.OrderBy(d => d.FaceValue.Value).ToList(),
-			false => dice.ToList()
+			true  => [.. dice.OrderBy(d => d.FaceValue.Value)],
+			false => [.. dice]
 		};
 
 		for (int i = 0; i < DieDisplayHeight; i++)
@@ -278,6 +282,7 @@ public class ScrabbleDiceGame
 			{
 				Console.ForegroundColor = ConsoleColor.DarkGray;
 			}
+
 			LetterDie die = orderedDice[i];
 			DisplayDie(die, null, cursorRow);
 			Console.ResetColor();
@@ -311,6 +316,7 @@ public class ScrabbleDiceGame
 						return slot with { Col = col, Row = slotRow };
 					}
 				}
+
 				break;
 			case ConsoleKey.RightArrow:
 				for (int col = slot.Col + 1; col < QLessDice.BoardWidth; col++)
@@ -320,6 +326,7 @@ public class ScrabbleDiceGame
 						return slot with { Col = col, Row = slotRow };
 					}
 				}
+
 				break;
 			case ConsoleKey.DownArrow:
 				for (int row = slot.Row + 1; row < QLessDice.BoardHeight; row++)
@@ -329,6 +336,7 @@ public class ScrabbleDiceGame
 						return slot with { Row = row };
 					}
 				}
+
 				break;
 			case ConsoleKey.UpArrow:
 				slotRow = (slot.Row < 0 ? QLessDice.BoardHeight : slot.Row);
@@ -339,6 +347,7 @@ public class ScrabbleDiceGame
 						return slot with { Row = row };
 					}
 				}
+
 				break;
 			default:
 				break;

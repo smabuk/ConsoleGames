@@ -42,6 +42,7 @@ public partial class ScrabbleDice2
 			{
 				bag[i].Faces[bag[i].UpperFace] = bag[i].FaceValue with { Display = "■" };
 			}
+
 			Rack.Add(bag[i]);
 			_ = bag.Remove(bag[i]);
 		} while (bag.Count > 0);
@@ -63,6 +64,7 @@ public partial class ScrabbleDice2
 			{
 				bag[i].Faces[bag[i].UpperFace] = bag[i].FaceValue with { Display = "■" };
 			}
+
 			Rack.Add(bag[i]);
 			_ = bag.Remove(bag[i]);
 		} while (bag.Count > 0);

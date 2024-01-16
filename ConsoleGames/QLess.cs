@@ -47,18 +47,18 @@ public sealed class QLess {
 			}
 			else if (key == ConsoleKey.Enter)
 			{
-				IEnumerable<PositionedLetter> scrabbleBoard =
-					_qLessDice.Board.Select(d => new PositionedLetter(d.Die.Display[0], d.Col, d.Row));
-				ScrabbleWordFinder swf = new(scrabbleBoard, _dictionary);
+				//IEnumerable<PositionedLetter> scrabbleBoard =
+				//	_qLessDice.Board.Select(d => new PositionedLetter(d.Die.Display[0], d.Col, d.Row));
+				ScrabbleWordFinder swf = new(_qLessDice.Board, _dictionary);
 				List<string> words = swf.FindWords();
 				List<PositionedDie> errors = [];
-				if (swf.ValidWordsAsTiles.SelectMany(t => t).Distinct().Count() != RackSize)
-				{
+				if (swf.ValidWordsAsTiles.Concat(swf.InvalidWordsAsTiles).SelectMany(t => t).Distinct().Count() != RackSize) {
 					DisplayBottomRow($" You haven't used all of the dice to make words (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
-				} else if (swf.ValidWordsAsTiles.Where(t => t.Count == 2).Any()) {
+				} else if (swf.ValidWordsAsTiles.Concat(swf.InvalidWordsAsTiles).Where(t => t.Count == 2).Any()) {
 					errors = swf
 						.ValidWordsAsTiles
+						.Concat(swf.InvalidWordsAsTiles)
 						.Where(t => t.Count == 2)
 						.SelectMany(t => t)
 						.Distinct()
@@ -67,9 +67,7 @@ public sealed class QLess {
 					DisplayBoard(_qLessDice.Board, errors);
 					DisplayBottomRow($" Words must be at least 3 letters long (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
-				}
-				else if (swf.IsBlockInMoreThanOnePiece())
-				{
+				} else if (swf.IsBlockInMoreThanOnePiece()) {
 					errors = swf
 						.Islands
 						.OrderByDescending(i => i.Count)
@@ -80,26 +78,9 @@ public sealed class QLess {
 					DisplayBoard(_qLessDice.Board, errors);
 					DisplayBottomRow($" The dice are not joined into 1 block (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
-				}
-				else
-				{
-					if (_dictionary is not null)
-					{
-						foreach (List<PositionedLetter> tile in swf.ValidWordsAsTiles)
-						{
-							if (_dictionary.IsWord(string.Join("", tile.Select(t => t.Letter))) is false)
-							{
-								tile.ForEach(t => errors.Add(new PositionedDie(_qLessDice.Board.Where(d => d.Col == t.Col && d.Row == t.Row).Single().Die, t.Col, t.Row)));
-							}
-						}
-						if (errors.Count != 0)
-						{
-							DisplayBoard(_qLessDice.Board, errors);
-							DisplayBottomRow($" You have some words spelt incorrectly (press a key to continue)... ", ConsoleColor.Red);
-							_ = Console.ReadKey(true).Key;
-						}
-						else
-						{
+				} else {
+					if (_dictionary is not null) {
+						if (swf.InvalidWordsAsTiles.Count == 0) {
 							Console.ForegroundColor = ConsoleColor.Yellow;
 							DisplayBoard(_qLessDice.Board);
 							Console.SetCursorPosition(0, _rackRow);
@@ -107,11 +88,19 @@ public sealed class QLess {
 							Console.ResetColor();
 							break;
 						}
-					}
-					DisplayBottomRow($" No dictionary specified, so if you know you have this correct press Y now ... ");
-					if (Console.ReadKey(true).Key == ConsoleKey.Y)
-					{
-						break;
+
+						foreach (List<PositionedTile> tile in swf.InvalidWordsAsTiles) {
+							tile.ForEach(t => errors.Add(new PositionedDie(_qLessDice.Board.Where(d => d.Col == t.Col && d.Row == t.Row).Single().Die, t.Col, t.Row)));
+						}
+
+						DisplayBoard(_qLessDice.Board, errors);
+						DisplayBottomRow($" You have some words spelt incorrectly (press a key to continue)... ", ConsoleColor.Red);
+						_ = Console.ReadKey(true).Key;
+					} else {
+						DisplayBottomRow($" No dictionary specified, so if you know you have this correct press Y now ... ");
+						if (Console.ReadKey(true).Key == ConsoleKey.Y) {
+							break;
+						}
 					}
 				}
 			}
@@ -194,9 +183,11 @@ public sealed class QLess {
 					if (highlightIndex == slot.Index) {
 						Console.ForegroundColor = ConsoleColor.Green;
 					}
+
 					if (errors?.Any(d => d.Col == slot.Col && d.Row == slot.Row) ?? false) {
 						Console.ForegroundColor = ConsoleColor.Red;
 					}
+
 					Console.Write(slot.Die.Display);
 					Console.ResetColor();
 				}
@@ -249,7 +240,7 @@ public sealed class QLess {
 
 	private static void DisplayRack(IEnumerable<LetterDie> dice, string name, bool sort = false, List<PositionedDie>? board = null, int? highlightIndex = -1) {
 		List<LetterDie> orderedDice = sort switch {
-			true  => dice.OrderBy(d => d.FaceValue.Value).ToList(),
+			true  => [.. dice.OrderBy(d => d.FaceValue.Value)],
 			false => dice.ToList()
 		};
 
@@ -268,6 +259,7 @@ public sealed class QLess {
 			} else if (board is not null && board[i].Row >= 0) {
 				Console.ForegroundColor = ConsoleColor.DarkGray;
 			}
+
 			LetterDie die = orderedDice[i];
 			DisplayDie(die, null, cursorRow);
 			Console.ResetColor();
@@ -296,6 +288,7 @@ public sealed class QLess {
 						return slot with { Col = col, Row = slotRow };
 					}
 				}
+
 				break;
 			case ConsoleKey.RightArrow:
 				for (int col = slot.Col + 1; col < QLessDice.BoardWidth; col++) {
@@ -303,6 +296,7 @@ public sealed class QLess {
 						return slot with { Col = col, Row = slotRow };
 					}
 				}
+
 				break;
 			case ConsoleKey.DownArrow:
 				for (int row = slot.Row + 1; row < QLessDice.BoardHeight; row++) {
@@ -310,6 +304,7 @@ public sealed class QLess {
 						return slot with { Row = row };
 					}
 				}
+
 				break;
 			case ConsoleKey.UpArrow:
 				slotRow = (slot.Row < 0 ? QLessDice.BoardHeight : slot.Row);
@@ -318,6 +313,7 @@ public sealed class QLess {
 						return slot with { Row = row };
 					}
 				}
+
 				break;
 			default:
 				break;

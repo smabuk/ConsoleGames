@@ -95,6 +95,7 @@ public sealed class Boggle {
 		if (TimeRemaining < RedZone) {
 			Console.ForegroundColor = ConsoleColor.Red;
 		}
+
 		Console.Write($"{TimeRemaining:m':'ss}");
 
 		Console.ResetColor();
@@ -124,6 +125,7 @@ public sealed class Boggle {
 			foreach (PositionedDie slot in validSlots) {
 				DisplayDie(slot.Die.Display, slot.Col * DieDisplayWidth, _topRow + (slot.Row * DieDisplayHeight));
 			}
+
 			Console.ResetColor();
 		}
 	}
@@ -157,6 +159,7 @@ public sealed class Boggle {
 			Console.SetCursorPosition(startCol, _topRow + i);
 			Console.Write($"│{new string(' ', Console.WindowWidth - 4 - startCol)}│");
 		}
+
 		Console.SetCursorPosition(startCol, _topRow + boardHeight - 1);
 		Console.Write($"└{new string('─', Console.WindowWidth - 4 - startCol)}┘");
 
@@ -175,6 +178,7 @@ public sealed class Boggle {
 					reason = "Duplicate word";
 					colour = ConsoleColor.DarkGray;
 				}
+
 				totalScore += score;
 				Console.ForegroundColor = colour;
 				Console.SetCursorPosition(startCol + 1 + (columnWidth * (wordIndex / (boardHeight - 2))), _topRow + 1 + row);
@@ -198,6 +202,7 @@ public sealed class Boggle {
 			Console.WriteLine($"{score,4}  {word,-15} {reason}");
 			Console.ResetColor();
 		}
+
 		Console.WriteLine();
 		Console.WriteLine($"{totalScore,4}  Total Score ");
 	}
