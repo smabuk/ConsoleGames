@@ -1,4 +1,4 @@
-﻿using static ConsoleGames.ScrabbleWordFinder;
+﻿using static Smab.DiceAndTiles.ScrabbleWordFinder;
 
 namespace ConsoleGames;
 
@@ -47,27 +47,25 @@ public sealed class QLess {
 			}
 			else if (key == ConsoleKey.Enter)
 			{
-				IEnumerable<ScrabbleTile> scrabbleBoard =
-					_qLessDice.Board.Select(d => new ScrabbleTile(d.Die.Display[0], d.Col, d.Row));
+				IEnumerable<PositionedLetter> scrabbleBoard =
+					_qLessDice.Board.Select(d => new PositionedLetter(d.Die.Display[0], d.Col, d.Row));
 				ScrabbleWordFinder swf = new(scrabbleBoard, _dictionary);
 				List<string> words = swf.FindWords();
-				List<PositionedDie> errors = new();
-				if (swf.WordsAsTiles.SelectMany(t => t).Distinct().Count() != RackSize)
+				List<PositionedDie> errors = [];
+				if (swf.ValidWordsAsTiles.SelectMany(t => t).Distinct().Count() != RackSize)
 				{
 					DisplayBottomRow($" You haven't used all of the dice to make words (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
-				}
-				else if (swf.WordsAsTiles.Where(t => t.Count == 2).Any())
-				{
+				} else if (swf.ValidWordsAsTiles.Where(t => t.Count == 2).Any()) {
 					errors = swf
-						.WordsAsTiles
+						.ValidWordsAsTiles
 						.Where(t => t.Count == 2)
 						.SelectMany(t => t)
 						.Distinct()
 						.Select(t => new PositionedDie(_qLessDice.Board.Where(d => d.Col == t.Col && d.Row == t.Row).Single().Die, t.Col, t.Row))
 						.ToList();
 					DisplayBoard(_qLessDice.Board, errors);
-					DisplayBottomRow($" Check your 2 letter words (press a key to continue)... ", ConsoleColor.Red);
+					DisplayBottomRow($" Words must be at least 3 letters long (press a key to continue)... ", ConsoleColor.Red);
 					_ = Console.ReadKey(true).Key;
 				}
 				else if (swf.IsBlockInMoreThanOnePiece())
@@ -87,7 +85,7 @@ public sealed class QLess {
 				{
 					if (_dictionary is not null)
 					{
-						foreach (List<ScrabbleTile> tile in swf.WordsAsTiles)
+						foreach (List<PositionedLetter> tile in swf.ValidWordsAsTiles)
 						{
 							if (_dictionary.IsWord(string.Join("", tile.Select(t => t.Letter))) is false)
 							{
@@ -117,7 +115,7 @@ public sealed class QLess {
 					}
 				}
 			}
-			else if (key >= ConsoleKey.A && key <= ConsoleKey.Z)
+			else if (key is >= ConsoleKey.A and <= ConsoleKey.Z)
 			{
 				currentKey = key.ToString();
 				for (int i = currentRackIndex + 1; i < RackSize * 2; i++)
@@ -130,9 +128,9 @@ public sealed class QLess {
 				}
 			}
 			else if (key is ConsoleKey.LeftArrow
-				or ConsoleKey.RightArrow
-				or ConsoleKey.UpArrow
-				or ConsoleKey.DownArrow)
+						 or ConsoleKey.RightArrow
+						 or ConsoleKey.UpArrow
+						 or ConsoleKey.DownArrow)
 			{
 				if (currentRackIndex >= 0)
 				{

@@ -2,7 +2,19 @@
   "profiles": {
     "ConsoleGames": {
       "commandName": "Project",
-      //"commandLineArgs": "qless -p"
+      "commandLineArgs": "scrabbledice -p"
+    },
+    "Scraabble Dice": {
+      "commandName": "Project",
+      "commandLineArgs": "scrabbledice -p"
+    },
+    "QLess": {
+      "commandName": "Project",
+      "commandLineArgs": "qless -p"
+    },
+    "Boggle": {
+      "commandName": "Project",
+      "commandLineArgs": "boggle deluxe -p"
     }
   }
 }

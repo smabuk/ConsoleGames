@@ -17,14 +17,14 @@ public static class KeyReader {
 
 	private static void Reader() {
 		while (true) {
-			getKey.WaitOne();
+			_ = getKey.WaitOne();
 			key = Console.ReadKey(true).Key;
-			gotKey.Set();
+			_ = gotKey.Set();
 		}
 	}
 
 	public static ConsoleKey? ReadKey(int timeOutMillisecs = Timeout.Infinite) {
-		getKey.Set();
+		_ = getKey.Set();
 		bool success = gotKey.WaitOne(timeOutMillisecs);
 		return success ? key : null;
 	}

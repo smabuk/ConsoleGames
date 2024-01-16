@@ -85,14 +85,14 @@ public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 		public required string Filename { get; init; } = "";
 
 		public override ValidationResult Validate() {
-			string[] validTypes = {
+			string[] validTypes = [
 				"classic",
 				"big",
 				"deluxe",
 				"superbig",
 				"new",
 				//"challenge",
-			};
+			];
 
 			if (!validTypes.Contains(Type.ToLower())) {
 				return ValidationResult.Error("Type must be one of classic, deluxe, big, superbig or new");
@@ -102,3 +102,47 @@ public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 		}
 	}
 }
+
+[Description("The game of Scrabble Dice")]
+public sealed class ScrabbleDiceCommand : Command<ScrabbleDiceCommand.Settings>
+{
+
+	public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
+	{
+		ScrabbleDiceGame scrabbleDice = new()
+		{
+			Verbose = settings.Verbose
+		};
+
+		if (settings.Play)
+		{
+			scrabbleDice.Play(settings.Filename);
+		}
+
+		return 0;
+	}
+
+	public sealed class Settings : CommandSettings
+	{
+		[Description("")]
+		[CommandOption("-v|--verbose")]
+		[DefaultValue(false)]
+		public bool Verbose { get; init; }
+
+		[Description("Play")]
+		[CommandOption("-p|--play")]
+		[DefaultValue(false)]
+		public bool Play { get; init; }
+
+		[Description("Set the countdown timer length in seconds")]
+		[CommandOption("-t|--time")]
+		[DefaultValue(180)]
+		public int TimerLength { get; init; }
+
+		[Description("Filename of the valid list of words to check against")]
+		[CommandOption("-d|--dict|--dictionary")]
+		public required string Filename { get; init; } = "";
+	}
+}
+
+
