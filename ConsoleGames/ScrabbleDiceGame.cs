@@ -4,6 +4,9 @@ namespace ConsoleGames;
 
 public class ScrabbleDiceGame
 {
+	private const int BOARD_HEIGHT = 10;
+	private const int BOARD_WIDTH = 12;
+
 	private const int BoardHeight = 19;
 	private const int BoardIndent = 17;
 	private const int DieDisplayHeight = 3;
@@ -305,7 +308,7 @@ public class ScrabbleDiceGame
 
 	private static PositionedDie MoveDie(PositionedDie slot, List<PositionedDie> board, ConsoleKey key)
 	{
-		int slotRow = (slot.Row < 0 ? QLessDice.BoardHeight - 1 : slot.Row);
+		int slotRow = (slot.Row < 0 ? BOARD_HEIGHT - 1 : slot.Row);
 		switch (key)
 		{
 			case ConsoleKey.LeftArrow:
@@ -319,7 +322,7 @@ public class ScrabbleDiceGame
 
 				break;
 			case ConsoleKey.RightArrow:
-				for (int col = slot.Col + 1; col < QLessDice.BoardWidth; col++)
+				for (int col = slot.Col + 1; col < BOARD_WIDTH; col++)
 				{
 					if (!board.Any(d => d.Row == slot.Row && d.Col == col))
 					{
@@ -329,7 +332,7 @@ public class ScrabbleDiceGame
 
 				break;
 			case ConsoleKey.DownArrow:
-				for (int row = slot.Row + 1; row < QLessDice.BoardHeight; row++)
+				for (int row = slot.Row + 1; row < BOARD_HEIGHT; row++)
 				{
 					if (!board.Any(d => d.Col == slot.Col && d.Row == row))
 					{
@@ -339,7 +342,7 @@ public class ScrabbleDiceGame
 
 				break;
 			case ConsoleKey.UpArrow:
-				slotRow = (slot.Row < 0 ? QLessDice.BoardHeight : slot.Row);
+				slotRow = (slot.Row < 0 ? BOARD_HEIGHT : slot.Row);
 				for (int row = slotRow - 1; row >= 0; row--)
 				{
 					if (!board.Any(d => d.Col == slot.Col && d.Row == row))
