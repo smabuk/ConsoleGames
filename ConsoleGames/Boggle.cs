@@ -1,35 +1,21 @@
-﻿using static Smab.DiceAndTiles.BoggleDice.BoggleType;
+﻿namespace ConsoleGames;
 
-namespace ConsoleGames;
-
-public sealed class Boggle {
+public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 	private const int DieDisplayWidth  =    5;
 	private const int DieDisplayHeight =    3;
 	private const int OneSecond        = 1000;
 
 	private static readonly TimeSpan RedZone = new(0, 0, 10);
 
-	private readonly DictionaryOfWords? _dictionary;
-	private readonly BoggleDice   _boggleDice;
-	private readonly List<string>  _words       = []; 
-	private long                  _timerStart;
-	private int                   _bottomRow;
-	private int                   _topRow      = int.MinValue;
+	private readonly BoggleDice   _boggleDice = new(type, string.IsNullOrWhiteSpace(filename) ? null : new DictionaryOfWords(filename));
+	private readonly List<string> _words       = []; 
+	private long _timerStart;
+	private int  _bottomRow;
+	private int  _topRow      = int.MinValue;
 
-	public Boggle(BoggleDice.BoggleType type, string? filename) {
-		Type = type;
-
-		_boggleDice = new(Type);
-
-		if (string.IsNullOrWhiteSpace(filename) is false) {
-			_dictionary = new DictionaryOfWords(filename);
-		}
-	}
-
-	public  TimeSpan              GameLength { get; set; }  = new(0, 3, 0);
-	public  BoggleDice.BoggleType Type       { get; init; } = Classic4x4;
-	public  bool                  Verbose    { get; set; }  = false;
-	private TimeSpan              TimeRemaining => GameLength.Subtract(Stopwatch.GetElapsedTime(_timerStart));
+	public  TimeSpan GameLength { get; set; }  = new(0, 3, 0);
+	public  bool     Verbose    { get; set; }  = false;
+	private TimeSpan TimeRemaining => GameLength.Subtract(Stopwatch.GetElapsedTime(_timerStart));
 
 	public void Play() {
 		string currentWord = "";
@@ -63,16 +49,7 @@ public sealed class Boggle {
 		ConsoleColor colour = Console.ForegroundColor;
 		(int score, BoggleDice.CheckResult result) = _boggleDice.CheckAndScoreWord(word);
 		if (result == BoggleDice.CheckResult.Success) {
-			if (_dictionary is not null) {
-				if (_dictionary.IsWord(word)) {
-					score = _boggleDice.ScoreWord(word);
-				} else {
-					reason = "Not a valid word";
-					colour = ConsoleColor.Red;
-				}
-			} else {
-				score = _boggleDice.ScoreWord(word);
-			}
+			score = _boggleDice.ScoreWord(word);
 		} else {
 			reason = result switch {
 				BoggleDice.CheckResult.Unplayable => "Unplayable",

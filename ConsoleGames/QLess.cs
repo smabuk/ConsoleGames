@@ -9,7 +9,6 @@ public sealed class QLess {
 	
 	private QLessDice _qLessDice = null!;
 
-	private DictionaryOfWords? _dictionary;
 	private long _timerStart;
 	private int  _bottomRow;
 	private int  _rackRow;
@@ -19,12 +18,7 @@ public sealed class QLess {
 
 	public void Play(string? dictionaryFilename)
 	{
-		if (string.IsNullOrWhiteSpace(dictionaryFilename) is false)
-		{
-			_dictionary = new DictionaryOfWords(dictionaryFilename);
-		}
-
-		_qLessDice = new(_dictionary);
+		_qLessDice = new(string.IsNullOrWhiteSpace(dictionaryFilename) ? null : new DictionaryOfWords(dictionaryFilename));
 		List<PositionedDie> localRack = [.. _qLessDice.Rack.OrderBy(r => r.Col)];
 
 		DisplayInit();
@@ -38,7 +32,7 @@ public sealed class QLess {
 		{
 			DisplayBoard(_qLessDice.Board, highlightName: currentRackDieName);
 			Console.SetCursorPosition(0, _rackRow);
-			DisplayRack(localRack, "Rack", board: _qLessDice.Board, highlightName: currentRackDieName);
+			DisplayRack(localRack, "Rack", board: [.._qLessDice.Board], highlightName: currentRackDieName);
 
 			DisplayBottomRow($" Press A-Z to select, arrow keys to place, <Enter> to check, and <Esc> to quit... ");
 			ConsoleKey key = Console.ReadKey(true).Key;
@@ -51,11 +45,11 @@ public sealed class QLess {
 			{
 				QLessDice.Status gameStatus = _qLessDice.GameStatus();
 				if (gameStatus is QLessDice.Win) {
-					if (_dictionary is not null) {
+					if (_qLessDice.HasDictionary) {
 						Console.ForegroundColor = ConsoleColor.Yellow;
 						DisplayBoard(_qLessDice.Board);
 						Console.SetCursorPosition(0, _rackRow);
-						DisplayRack(_qLessDice.Rack, "Success", board: _qLessDice.Board);
+						DisplayRack(_qLessDice.Rack, "Success", board: [.._qLessDice.Board]);
 						Console.ResetColor();
 						break;
 					} else {
@@ -77,7 +71,7 @@ public sealed class QLess {
 						DisplayBoard(_qLessDice.Board, [.. errorsStatus.DiceWithErrors]);
 						DisplayBottomRow($" The dice are not joined into 1 block (press a key to continue)... ", ConsoleColor.Red);
 						_ = Console.ReadKey(true).Key;
-					} else if (errorsStatus.ErrorReasons.HasFlag(QLessDice.ErrorReasons.Spelling)) {
+					} else if (errorsStatus.ErrorReasons.HasFlag(QLessDice.ErrorReasons.Misspelt)) {
 						DisplayBoard(_qLessDice.Board, [.. errorsStatus.DiceWithErrors]);
 						DisplayBottomRow($" Some of the words are not spelt correctly (press a key to continue)... ", ConsoleColor.Red);
 						_ = Console.ReadKey(true).Key;
