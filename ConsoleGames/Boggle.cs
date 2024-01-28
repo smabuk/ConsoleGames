@@ -44,7 +44,7 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 		FinalSummary(_bottomRow);
 	}
 
-	private (string Reason, ConsoleColor Colour) WordScoreReasonAndColour(WordScore wordScore) {
+	private (string Reason, ConsoleColor Colour) WordScoreReasonAndColour(BoggleDice.WordScore wordScore) {
 
 		return wordScore.Reason switch
 		{
@@ -135,7 +135,7 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 		Console.Write($"└{new string('─', Console.WindowWidth - 4 - startCol)}┘");
 
 		int row = 0;
-		List<WordScore> wordScores = [.. _boggleDice.WordScores];
+		List<BoggleDice.WordScore> wordScores = [.. _boggleDice.WordScores];
 		if (wordScores.Count != 0) {
 			maxWordWidth = _boggleDice.WordScores.Max(ws => ws.Word.Length);
 			int columnWidth = ScoreWidth + maxWordWidth + 3;
@@ -158,7 +158,7 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 
 		Console.WriteLine();
 		Console.WriteLine("Score Word            Reason");
-		foreach (WordScore wordScore in _boggleDice.WordScores.OrderBy(ws => ws.Word)) {
+		foreach (BoggleDice.WordScore wordScore in _boggleDice.WordScores.OrderBy(ws => ws.Word)) {
 			(string reason, ConsoleColor colour) = WordScoreReasonAndColour(wordScore);
 			Console.ForegroundColor = colour;
 			Console.WriteLine($"{wordScore.Score,4}  {wordScore.Word,-15} {reason}");
