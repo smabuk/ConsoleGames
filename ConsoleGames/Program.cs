@@ -1,4 +1,6 @@
-﻿CommandApp app = new();
+﻿Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+CommandApp app = new();
 
 app.Configure(config => {
 

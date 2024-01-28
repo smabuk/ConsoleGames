@@ -8,7 +8,7 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 	private static readonly TimeSpan RedZone = new(0, 0, 10);
 
 	private readonly BoggleDice   _boggleDice = new(type, string.IsNullOrWhiteSpace(filename) ? null : new DictionaryOfWords(filename));
-	private readonly List<string> _words       = []; 
+	//private readonly List<string> _words       = [];
 	private long _timerStart;
 	private int  _bottomRow;
 	private int  _topRow      = int.MinValue;
@@ -21,7 +21,7 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 		string currentWord = "";
 		
 		Console.WriteLine();
-		(int _, _bottomRow) = Console.GetCursorPosition();
+		(_, _bottomRow) = Console.GetCursorPosition();
 		_timerStart = Stopwatch.GetTimestamp();
 		
 		while (TimeRemaining.Ticks > 0) {
@@ -32,7 +32,7 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 			if (key == ConsoleKey.Escape) {
 				break;
 			} else if (key == ConsoleKey.Enter && currentWord.Length > 0) {
-				_words.Add(currentWord);
+				_ = _boggleDice.PlayWord(currentWord);
 				currentWord = "";
 			} else if (key == ConsoleKey.Backspace && currentWord.Length > 0) {
 				currentWord = currentWord[..^1];
@@ -44,23 +44,17 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 		FinalSummary(_bottomRow);
 	}
 
-	private (int score, string reason, ConsoleColor colour) CheckWord(string word) {
-		string reason = "";
-		ConsoleColor colour = Console.ForegroundColor;
-		(int score, BoggleDice.CheckResult result) = _boggleDice.CheckAndScoreWord(word);
-		if (result == BoggleDice.CheckResult.Success) {
-			score = _boggleDice.ScoreWord(word);
-		} else {
-			reason = result switch {
-				BoggleDice.CheckResult.Unplayable => "Unplayable",
-				BoggleDice.CheckResult.Misspelt   => "Misspelt",
-				BoggleDice.CheckResult.Success    => "Success",
-				_                                 => "Unknown",
-			};
-			colour = ConsoleColor.Red;
-		}
+	private (string Reason, ConsoleColor Colour) WordScoreReasonAndColour(WordScore wordScore) {
 
-		return (score, reason, colour);
+		return wordScore.Reason switch
+		{
+			BoggleDice.ScoreReason.Success       => ("",               Console.ForegroundColor),
+			BoggleDice.ScoreReason.AlreadyPlayed => ("Duplicate Word", ConsoleColor.DarkGray),
+			BoggleDice.ScoreReason.Misspelt      => ("Misspelt",       ConsoleColor.Red),
+			BoggleDice.ScoreReason.TooShort      => ("Too short",      ConsoleColor.Red),
+			BoggleDice.ScoreReason.Unplayable    => ("Unplayable",     ConsoleColor.Red),
+			_ => ("", Console.ForegroundColor)
+		};
 	}
 
 	private ConsoleKey DisplayAndGetInput(int row, string word) {
@@ -140,26 +134,19 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 		Console.SetCursorPosition(startCol, _topRow + boardHeight - 1);
 		Console.Write($"└{new string('─', Console.WindowWidth - 4 - startCol)}┘");
 
-		int totalScore = 0;
 		int row = 0;
-		if (_words.Count > 0) {
-			maxWordWidth = _words.Max(w => w.Length);
+		List<WordScore> wordScores = [.. _boggleDice.WordScores];
+		if (wordScores.Count != 0) {
+			maxWordWidth = _boggleDice.WordScores.Max(ws => ws.Word.Length);
 			int columnWidth = ScoreWidth + maxWordWidth + 3;
 
-			for (int wordIndex = 0; wordIndex < _words.Count; wordIndex++) {
+			for (int wordIndex = 0; wordIndex < wordScores.Count; wordIndex++) {
 				row = wordIndex % (boardHeight - 2);
-				string word = _words[wordIndex];
-				(int score, string reason, ConsoleColor colour) = CheckWord(word);
-				if (_words.Take(wordIndex).Contains(word)) {
-					score = 0;
-					reason = "Duplicate word";
-					colour = ConsoleColor.DarkGray;
-				}
-
-				totalScore += score;
+				string word = wordScores[wordIndex].Word;
+				(string reason, ConsoleColor colour) = WordScoreReasonAndColour(wordScores[wordIndex]);
 				Console.ForegroundColor = colour;
 				Console.SetCursorPosition(startCol + 1 + (columnWidth * (wordIndex / (boardHeight - 2))), _topRow + 1 + row);
-				Console.Write($"{score,ScoreWidth} {word}");
+				Console.Write($"{wordScores[wordIndex].Score,ScoreWidth} {word}");
 				Console.ResetColor();
 			}
 		}
@@ -171,16 +158,14 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 
 		Console.WriteLine();
 		Console.WriteLine("Score Word            Reason");
-		int totalScore = 0;
-		foreach (string word in _words.Order().Distinct()) {
-			(int score, string reason, ConsoleColor colour) = CheckWord(word);
-			totalScore += score;
+		foreach (WordScore wordScore in _boggleDice.WordScores.OrderBy(ws => ws.Word)) {
+			(string reason, ConsoleColor colour) = WordScoreReasonAndColour(wordScore);
 			Console.ForegroundColor = colour;
-			Console.WriteLine($"{score,4}  {word,-15} {reason}");
+			Console.WriteLine($"{wordScore.Score,4}  {wordScore.Word,-15} {reason}");
 			Console.ResetColor();
 		}
 
 		Console.WriteLine();
-		Console.WriteLine($"{totalScore,4}  Total Score ");
+		Console.WriteLine($"{_boggleDice.Score,4}  Total Score ");
 	}
 }
