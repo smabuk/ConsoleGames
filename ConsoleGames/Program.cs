@@ -16,9 +16,9 @@ app.Configure(config => {
 		.WithExample(["qless", "-p"])
 		.WithExample(["qless", "-v"]);
 
-	_ = config.AddCommand<ScrabbleDiceCommand>("scrabbledice")
-		.WithExample(["scrabbledice",])
-		.WithExample(["scrabbledice", "-v"]);
+	//_ = config.AddCommand<ScrabbleDiceCommand>("scrabbledice")
+	//	.WithExample(["scrabbledice",])
+	//	.WithExample(["scrabbledice", "-v"]);
 
 });
 

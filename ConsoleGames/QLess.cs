@@ -192,9 +192,9 @@ public sealed class QLess {
 		DisplayRack(_qLessDice.Rack, "Rack");
 		if (verbose) {
 			Console.WriteLine();
-			DisplayRack(_qLessDice.Rack.Where(d =>  "AEIOU".Contains(((LetterDie)d.Die).FaceValue.Value!)), "Vowels"    , true);
+			DisplayRack(_qLessDice.Rack.Where(d =>  "AEIOU".Contains(d.Die.Display)), "Vowels"    , true);
 			Console.WriteLine();
-			DisplayRack(_qLessDice.Rack.Where(d => !"AEIOU".Contains(((LetterDie)d.Die).FaceValue.Value!)), "Consonants", true);
+			DisplayRack(_qLessDice.Rack.Where(d => !"AEIOU".Contains(d.Die.Display)), "Consonants", true);
 		}
 	}
 
@@ -251,7 +251,7 @@ public sealed class QLess {
 
 		Console.Write($"┌───┐");
 		Console.SetCursorPosition((int)col, (int)row + 1);
-		Console.Write($"│ {die.FaceValue.Display} │");
+		Console.Write($"│ {die.Display} │");
 		Console.SetCursorPosition((int)col, (int)row + 2);
 		Console.Write($"└───┘");
 	}
