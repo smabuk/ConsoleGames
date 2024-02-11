@@ -26,13 +26,13 @@ public sealed class QLess {
 		_timerStart = Stopwatch.GetTimestamp();
 		string currentKey = "";
 		int currentRackIndex = 0;
-		string? currentRackDieName = null;
+		DieId? currentRackDieId = null;
 
 		while (true)
 		{
-			DisplayBoard(_qLessDice.Board, highlightName: currentRackDieName);
+			DisplayBoard(_qLessDice.Board, highlightId: currentRackDieId);
 			Console.SetCursorPosition(0, _rackRow);
-			DisplayRack(localRack, "Rack", board: [.._qLessDice.Board], highlightName: currentRackDieName);
+			DisplayRack(localRack, "Rack", board: [.._qLessDice.Board], highlightId: currentRackDieId);
 
 			DisplayBottomRow($" Press A-Z to select, arrow keys to place, <Enter> to check, and <Esc> to quit... ");
 			ConsoleKey key = Console.ReadKey(true).Key;
@@ -87,7 +87,7 @@ public sealed class QLess {
 					if (localRack[i % localRack.Count].Die.Display == currentKey)
 					{
 						currentRackIndex = i % localRack.Count;
-						currentRackDieName = localRack[currentRackIndex].Die.Name;
+						currentRackDieId = localRack[currentRackIndex].Die.Id;
 						break;
 					}
 				}
@@ -97,9 +97,9 @@ public sealed class QLess {
 						 or ConsoleKey.UpArrow
 						 or ConsoleKey.DownArrow)
 			{
-				if (currentRackDieName is not null)
+				if (currentRackDieId is not null)
 				{
-					MoveDie(currentRackDieName, key);
+					MoveDie((DieId)currentRackDieId, key);
 				}
 			}
 		}
@@ -107,7 +107,7 @@ public sealed class QLess {
 		DisplayBottomRow($"Time elapsed: {Stopwatch.GetElapsedTime(_timerStart):mm\\:ss}");
 	}
 
-	private void DisplayBoard(IReadOnlyCollection<PositionedDie>? board = null, IReadOnlyCollection<PositionedDie>? errors = null, string? highlightName = null) {
+	private void DisplayBoard(IReadOnlyCollection<PositionedDie>? board = null, IReadOnlyCollection<PositionedDie>? errors = null, string? highlightId = null) {
 		const int RowHeight = 2;
 		const int ColWidth = 4;
 		const string boardTemplate = """
@@ -156,7 +156,7 @@ public sealed class QLess {
 					int row = _topRow + 1 + (slot.Row * RowHeight);
 					int col = BOARD_DISPLAY_INDENT + (slot.Col * ColWidth);
 					Console.SetCursorPosition(col, row);
-					if (highlightName == slot.Die.Name) {
+					if (highlightId == slot.Die.Id) {
 						Console.ForegroundColor = ConsoleColor.Green;
 					}
 
@@ -214,7 +214,7 @@ public sealed class QLess {
 		}
 	}
 
-	private void DisplayRack(IEnumerable<PositionedDie> localRack, string name, bool sort = false, List<PositionedDie>? board = null, string? highlightName = null) {
+	private void DisplayRack(IEnumerable<PositionedDie> localRack, string name, bool sort = false, List<PositionedDie>? board = null, string? highlightId = null) {
 		List<PositionedDie> orderedRack = sort switch {
 			true  => [.. localRack.OrderBy(r => r.Die.Display)],
 			false => [.. localRack],
@@ -231,9 +231,9 @@ public sealed class QLess {
 		Console.Write($"{name,12}: ");
 		(cursorCol, _) = Console.GetCursorPosition();
 		for (int i = 0; i < orderedRack.Count; i++) {
-			if (highlightName == ((LetterDie)(orderedRack[i].Die)).Name) {
+			if (highlightId == ((LetterDie)(orderedRack[i].Die)).Id) {
 				Console.ForegroundColor = ConsoleColor.Green;
-			} else if (board is not null && board.Any(pd => pd.Die.Name == orderedRack[i].Die.Name)) {
+			} else if (board is not null && board.Any(pd => pd.Die.Id == orderedRack[i].Die.Id)) {
 				Console.ForegroundColor = ConsoleColor.DarkGray;
 			}
 
@@ -256,13 +256,13 @@ public sealed class QLess {
 		Console.Write($"└───┘");
 	}
 
-	private void MoveDie(string name, ConsoleKey key) {
-		PositionedDie slot = _qLessDice.Board.SingleOrDefault(pd => pd.Die.Name == name) ?? _qLessDice.Rack.Single(pd => pd.Die.Name == name);
+	private void MoveDie(DieId dieId, ConsoleKey key) {
+		PositionedDie slot = _qLessDice.Board.SingleOrDefault(pd => pd.Die.Id == dieId) ?? _qLessDice.Rack.Single(pd => pd.Die.Id == dieId);
 		int slotRow = (slot.Row < 0 ? BOARD_HEIGHT - 1 : slot.Row);
 		switch (key) {
 			case ConsoleKey.LeftArrow:
 				for (int col = slot.Col - 1; col >= 0; col--) {
-					if (_qLessDice.PlaceOnBoard(name, col, slotRow)) {
+					if (_qLessDice.PlaceOnBoard(dieId, col, slotRow)) {
 						break;
 					}
 				}
@@ -270,7 +270,7 @@ public sealed class QLess {
 				break;
 			case ConsoleKey.RightArrow:
 				for (int col = slot.Col + 1; col < BOARD_WIDTH; col++) {
-					if (_qLessDice.PlaceOnBoard(name, col, slotRow)) {
+					if (_qLessDice.PlaceOnBoard(dieId, col, slotRow)) {
 						break;
 					}
 				}
@@ -278,7 +278,7 @@ public sealed class QLess {
 				break;
 			case ConsoleKey.DownArrow:
 				for (int row = slot.Row + 1; row < BOARD_HEIGHT; row++) {
-					if (_qLessDice.PlaceOnBoard(name, slot.Col, row)) {
+					if (_qLessDice.PlaceOnBoard(dieId, slot.Col, row)) {
 						break;
 					}
 				}
@@ -287,7 +287,7 @@ public sealed class QLess {
 			case ConsoleKey.UpArrow:
 				slotRow = (slot.Row < 0 ? BOARD_HEIGHT : slot.Row);
 				for (int row = slotRow - 1; row >= 0; row--) {
-					if (_qLessDice.PlaceOnBoard(name, slot.Col, row)) {
+					if (_qLessDice.PlaceOnBoard(dieId, slot.Col, row)) {
 						break;
 					}
 				}
