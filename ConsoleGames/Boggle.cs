@@ -1,4 +1,6 @@
-﻿namespace ConsoleGames;
+﻿using Smab.DiceAndTiles.Games.Boggle;
+
+namespace ConsoleGames;
 
 public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 	private const int DieDisplayWidth  =    5;
@@ -8,7 +10,7 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 	private static readonly TimeSpan RedZone = new(0, 0, 10);
 
 	private readonly BoggleDice   _boggleDice = new(type, string.IsNullOrWhiteSpace(filename) ? null : new DictionaryOfWords(filename));
-	//private readonly List<string> _words       = [];
+
 	private long _timerStart;
 	private int  _bottomRow;
 	private int  _topRow      = int.MinValue;

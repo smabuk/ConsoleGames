@@ -1,4 +1,6 @@
-﻿namespace ConsoleGames;
+﻿using Smab.DiceAndTiles.Games.QLess;
+
+namespace ConsoleGames;
 
 public sealed class QLess {
 	private const int BOARD_HEIGHT = 10;
@@ -231,19 +233,19 @@ public sealed class QLess {
 		Console.Write($"{name,12}: ");
 		(cursorCol, _) = Console.GetCursorPosition();
 		for (int i = 0; i < orderedRack.Count; i++) {
-			if (highlightId == ((LetterDie)(orderedRack[i].Die)).Id) {
+			if (highlightId == (orderedRack[i].Die).Id) {
 				Console.ForegroundColor = ConsoleColor.Green;
 			} else if (board is not null && board.Any(pd => pd.Die.Id == orderedRack[i].Die.Id)) {
 				Console.ForegroundColor = ConsoleColor.DarkGray;
 			}
 
-			LetterDie die = (LetterDie)orderedRack[i].Die;
+			Die die = orderedRack[i].Die;
 			DisplayDie(die, cursorCol + (orderedRack[i].Col * 5), cursorRow);
 			Console.ResetColor();
 		}
 	}
 
-	private static void DisplayDie(LetterDie die, int? col = null, int? row = null) {
+	private static void DisplayDie(Die die, int? col = null, int? row = null) {
 		(int cursorCol, int cursorRow) = Console.GetCursorPosition();
 		col ??= cursorCol;
 		row ??= cursorRow;

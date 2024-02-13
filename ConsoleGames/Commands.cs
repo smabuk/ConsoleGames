@@ -1,4 +1,6 @@
-﻿namespace ConsoleGames;
+﻿using Smab.DiceAndTiles.Games.Boggle;
+
+namespace ConsoleGames;
 
 [Description("The game of Q-Less")]
 public sealed class QLessCommand : Command<QLessCommand.Settings> {
