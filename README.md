@@ -1,6 +1,6 @@
 # Console Games
 
-Emulates some games played with various letter dice
+Emulates some games played with various letter dice.
 
 Currently supported games:
 
@@ -22,7 +22,7 @@ Currently supported games:
 	-d | --dict  <filename>  Specify a dictionary
 	                         <filename> should be a file with valid words - 1 per line
 	-t | --timer <secs>      Set the countdown timer length in seconds (default 180)
-	-v | --verbose           Display valid paths as you type the words
+	     --verbose           Display valid paths as you type the words
 
 ### Gameplay
 Type the word you want to add and then press the `Enter` key.
@@ -43,7 +43,7 @@ You can exit the game at any time by pressing `Escape` and your score will still
 	-p | --play          Play the game
 	-d | --dict  <filename>  Specify a dictionary
 	                         <filename> should be a file with valid words - 1 per line
-	-v | --verbose       Show the vowels and consonants
+	   | --verbose       Show the vowels and consonants
 
 ### Gameplay
 Whilst playing the game you use the following keys

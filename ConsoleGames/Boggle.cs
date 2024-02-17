@@ -9,7 +9,7 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 
 	private static readonly TimeSpan RedZone = new(0, 0, 10);
 
-	private readonly BoggleDice   _boggleDice = new(type, string.IsNullOrWhiteSpace(filename) ? null : new DictionaryOfWords(filename));
+	private readonly BoggleDice   _boggleDice = new(type, string.IsNullOrWhiteSpace(filename) ? new CSW21Dictionary() : new DictionaryService(filename));
 
 	private long _timerStart;
 	private int  _bottomRow;
@@ -46,7 +46,7 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 		FinalSummary(_bottomRow);
 	}
 
-	private (string Reason, ConsoleColor Colour) WordScoreReasonAndColour(BoggleDice.WordScore wordScore) {
+	private static (string Reason, ConsoleColor Colour) WordScoreReasonAndColour(BoggleDice.WordScore wordScore) {
 
 		return wordScore.Reason switch
 		{

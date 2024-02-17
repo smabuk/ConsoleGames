@@ -20,7 +20,7 @@ public sealed class QLess {
 
 	public void Play(string? dictionaryFilename)
 	{
-		_qLessDice = new(string.IsNullOrWhiteSpace(dictionaryFilename) ? null : new DictionaryOfWords(dictionaryFilename));
+		_qLessDice = new(string.IsNullOrWhiteSpace(dictionaryFilename) ? new CSW21Dictionary() : new DictionaryService(dictionaryFilename));
 		List<PositionedDie> localRack = [.. _qLessDice.Rack.OrderBy(r => r.Col)];
 
 		DisplayInit();
@@ -216,7 +216,7 @@ public sealed class QLess {
 		}
 	}
 
-	private void DisplayRack(IEnumerable<PositionedDie> localRack, string name, bool sort = false, List<PositionedDie>? board = null, string? highlightId = null) {
+	private static void DisplayRack(IEnumerable<PositionedDie> localRack, string name, bool sort = false, List<PositionedDie>? board = null, string? highlightId = null) {
 		List<PositionedDie> orderedRack = sort switch {
 			true  => [.. localRack.OrderBy(r => r.Die.Display)],
 			false => [.. localRack],
