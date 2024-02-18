@@ -8,9 +8,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Smab.DiceAndTiles" Version="0.9.12" />
-		<PackageReference Include="Smab.DictionaryOfWords" Version="1.0.1" />
-		<PackageReference Include="Smab.DictionaryOfWords.CSW12" Version="1.0.1" />
+		<PackageReference Include="Smab.DiceAndTiles" Version="0.9.15" />
+		<PackageReference Include="Smab.DictionaryOfWords" Version="1.0.4" />
+		<PackageReference Include="Smab.DictionaryOfWords.CSW12" Version="1.0.4" />
 		<PackageReference Include="Spectre.Console" Version="0.48.0" />
 		<PackageReference Include="Spectre.Console.Cli" Version="0.48.0" />
 	</ItemGroup>

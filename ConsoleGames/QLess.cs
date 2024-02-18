@@ -20,7 +20,7 @@ public sealed class QLess {
 
 	public void Play(string? dictionaryFilename)
 	{
-		_qLessDice = new(string.IsNullOrWhiteSpace(dictionaryFilename) ? new CSW21Dictionary() : new DictionaryService(dictionaryFilename));
+		_qLessDice = new(string.IsNullOrWhiteSpace(dictionaryFilename) ? CSW21Dictionary.Create() : new DictionaryService(dictionaryFilename));
 		List<PositionedDie> localRack = [.. _qLessDice.Rack.OrderBy(r => r.Col)];
 
 		DisplayInit();

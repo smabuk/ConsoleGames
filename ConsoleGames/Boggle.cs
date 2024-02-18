@@ -9,7 +9,7 @@ public sealed class Boggle(BoggleDice.BoggleType type, string? filename) {
 
 	private static readonly TimeSpan RedZone = new(0, 0, 10);
 
-	private readonly BoggleDice   _boggleDice = new(type, string.IsNullOrWhiteSpace(filename) ? new CSW21Dictionary() : new DictionaryService(filename));
+	private readonly BoggleDice   _boggleDice = new(type, string.IsNullOrWhiteSpace(filename) ? CSW21Dictionary.Create() : new DictionaryService(filename));
 
 	private long _timerStart;
 	private int  _bottomRow;
