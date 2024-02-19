@@ -96,11 +96,9 @@ public sealed class BoggleCommand : Command<BoggleCommand.Settings> {
 				//"challenge",
 			];
 
-			if (!validTypes.Contains(Type.ToLower())) {
-				return ValidationResult.Error("Type must be one of classic, deluxe, big, superbig or new");
-			}
-
-			return base.Validate();
+			return validTypes.Contains(Type.ToLowerInvariant())
+				? base.Validate()
+				: ValidationResult.Error("Type must be one of classic, deluxe, big, superbig or new");
 		}
 	}
 }
